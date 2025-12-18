@@ -7,9 +7,13 @@ requires-python = ">=3.12"
 dependencies = [
     "dotenv>=0.9.9",
     "fastapi>=0.125.0",
+    "fastmcp>=2.14.1",
+    "langchain>=1.2.0",
     "langchain-classic>=1.0.0",
     "langchain-core>=1.2.2",
+    "langchain-google-genai>=4.1.1",
     "langchain-mcp-adapters>=0.2.1",
+    "langchain-openai>=1.1.5",
     "langgraph>=1.0.5",
     "uvicorn>=0.38.0",
 ]
