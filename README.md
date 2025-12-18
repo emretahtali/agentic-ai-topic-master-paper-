@@ -1,1 +1,1 @@
-# agentic-ai-topic-master-paper-
+# agentic-ai-topic-manager-paper

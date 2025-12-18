@@ -1,0 +1,15 @@
+[project]
+name = "agentic-network"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dotenv>=0.9.9",
+    "fastapi>=0.125.0",
+    "langchain-classic>=1.0.0",
+    "langchain-core>=1.2.2",
+    "langchain-mcp-adapters>=0.2.1",
+    "langgraph>=1.0.5",
+    "uvicorn>=0.38.0",
+]

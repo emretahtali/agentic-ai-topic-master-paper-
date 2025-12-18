@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pytest_cache/
+.mypy_cache/
+.venv/
+.venv
+.env
+.git/
+.gitignore
+.vscode/
+.idea/
+dist/
+build/
+.cache/
+tests/dialog_test.py

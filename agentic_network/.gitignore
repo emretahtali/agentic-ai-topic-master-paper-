@@ -1,0 +1,65 @@
+# Byte-compiled / Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Django / general Python files to ignore
+*.log
+*.pot
+*.pyc
+*.db
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+media/
+*.pid
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.tox/
+
+# Env / config / secrets
+.env
+local_settings.py
+
+# IDE / editor / OS-specific files/folders
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.DS_Store
+Thumbs.db
+
+# Jupyter, IPython, notebooks
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# Other common unnecessary files / folders
+__pypackages__/
+static_cdn/
+DS_Store
+.DS_Store
+uv.lock
+.idea
