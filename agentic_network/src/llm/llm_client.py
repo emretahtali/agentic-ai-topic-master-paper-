@@ -18,10 +18,7 @@ def get_llm(llm_type: LLMModel = LLMModel.GEMINI) -> BaseChatModel:
     llm_endpoint = os.getenv("LLM_API_ENDPOINT").strip()
     llm_key = os.getenv("LLM_API_KEY").strip()
 
-    if llm_type is None:
-        llm_type = os.getenv("LLM_API_TYPE").strip()
-
-    if llm_type == "GEMINI":
+    if llm_type == LLMModel.GEMINI:
         return get_llm_gemini(llm_key)
 
     return get_llm_openai(llm_endpoint, llm_key)

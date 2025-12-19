@@ -8,6 +8,7 @@ import operator
 class TopicManagerState(TypedDict):
     current_message: Optional[BaseMessage]
     messages: Annotated[list[BaseMessage], add_messages]
+    selected_agent: str
 
     intermediate_steps: Annotated[list[tuple[AgentAction, str]], operator.add]
     agent_outcome: Optional[Union[AgentAction, AgentFinish, None]]
