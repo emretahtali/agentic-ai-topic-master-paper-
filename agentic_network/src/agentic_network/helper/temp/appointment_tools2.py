@@ -9,8 +9,11 @@ from src.agentic_network.core.agent_state import AgentState
 class AppointmnetTool(ToolBase):
     
     def __init__(self):
-        self.mock_data = MOCK_DATA
-
+        self.mock_data = MOCK_DATA.copy()
+        self.user_data = {
+            "kimlik": "345345345"
+        }
+        self.authenticated = False
     
     def update_appointment_slots(
         self,
@@ -121,6 +124,18 @@ class AppointmnetTool(ToolBase):
             "appointment_data": app_data,
             "validation_feedback": validation_errors or None,
             }
+    
+    def authenticate_user(self, identity_number: str) -> dict:
+        """
+        Kullanıcı kimliğini doğrular.
+        """
+        if identity_number == self.user_data["kimlik"]:
+            self.authenticated = True
+            return {"status": "success", "message": "Kimlik doğrulama başarılı. Artık randevu oluşturabilirsiniz."}
+        else:
+            self.authenticated = False
+            return {"status": "error", "message": "Kimlik doğrulama başarısız. Lütfen kimlik numaranızı kontrol edin."}
+
 
     def get_hospitals_by_city_and_district(self, city: str, district: str) -> list:
         """
