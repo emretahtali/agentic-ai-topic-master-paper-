@@ -1,12 +1,14 @@
 import json
-from ...data.mock_data import MOCK_DATA
 from typing import Any
 
-from src.agentic_network.core.appointment_state import SlotSource, SlotStatus
-from src.agentic_network.core.agent_state import AgentState
+from appointment.util.data import MOCK_DATA
+from appointment.util.slot import SlotSource, SlotStatus
+from tools import ToolBase
+
+from agentic_network.core import AgentState
 
 
-class AppointmnetTool(ToolBase):
+class AppointmentTools(ToolBase):
     
     def __init__(self):
         self.mock_data = MOCK_DATA.copy()

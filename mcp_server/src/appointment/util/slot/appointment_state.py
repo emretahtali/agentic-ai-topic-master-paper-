@@ -1,23 +1,21 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Optional, TypedDict
 from typing_extensions import Literal
 
 
 # Slots
-class SlotStatus(str, Enum):
+class SlotStatus(StrEnum):
     EMPTY = "empty"
     FILLED = "filled"
     INVALID = "invalid"
 
-class SlotSource(str, Enum):
+class SlotSource(StrEnum):
     USER = "user"
     INFERRED = "inferred"
     SYSTEM = "system"
 
 
-
 # State
-
 StepName = Literal[
     "tc_kimlik", "sehir", "ilce", "hastane",
     "poliklinik", "doktor", "tarih", "saat", "onay"

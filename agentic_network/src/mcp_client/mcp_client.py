@@ -1,7 +1,7 @@
 ﻿from langchain_mcp_adapters.client import MultiServerMCPClient
 from dotenv import find_dotenv, load_dotenv
 from typing import Optional
-import traceback, os
+import os
 
 
 class MCPClient:
@@ -24,7 +24,7 @@ class MCPClient:
         mcp_server_configs = {
             "mcp_tools_server": {
                 "url": mcp_server_endpoint,
-                "transport": "sse"
+                "transport": "stdio"
             }
         }
 

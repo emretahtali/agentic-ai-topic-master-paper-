@@ -47,7 +47,7 @@ def get_credit_card_debt() -> str:
 if __name__ == "__main__":
     print("Server başladı")
     mcp.run(
-        transport="sse",
+        transport="stdio",
         host="0.0.0.0",
         port=8000
     )

@@ -1,4 +1,4 @@
-from src.agentic_network.core.appointment_state import AppointmentState, SlotDetail, SlotStatus
+from appointment.util.slot import AppointmentState, SlotDetail, SlotStatus
 
 
 def create_initial_appointment_state() -> AppointmentState:

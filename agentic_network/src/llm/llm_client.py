@@ -1,5 +1,4 @@
 from enum import StrEnum, auto
-from typing import Literal
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from dotenv import load_dotenv, find_dotenv
@@ -23,5 +22,8 @@ def get_llm(llm_type: LLMModel = LLMModel.GEMINI) -> BaseChatModel:
 
     if llm_type == "GEMINI":
         return get_llm_gemini(llm_key)
+
+    elif llm_type == "OPENAI":
+        return get_llm_openai(llm_endpoint, llm_key)
 
     return get_llm_openai(llm_endpoint, llm_key)

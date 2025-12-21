@@ -3,7 +3,7 @@ from typing import TypedDict, Annotated, Optional, Union
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.messages import BaseMessage
 import operator
-from src.agentic_network.core.appointment_state import AppointmentState
+
 
 class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]

@@ -7,7 +7,6 @@ from langchain_core.messages.system import SystemMessage
 
 from agentic_network.core import AgentState
 from src.agentic_network.agents.agent import Agent
-from src.agentic_network.helper.initialize_slots import create_initial_appointment_state
 
 
 class AppointmentAgent(Agent):
@@ -19,14 +18,14 @@ class AppointmentAgent(Agent):
 
     async def _get_node(self, state: AgentState) -> dict:
         messages = state["messages"]
-        
-        app_data = state.get("appointment_data") or create_initial_appointment_state()
-        
-        # Slot summary
-        slots_summary = "\n".join([
-            f"- {k}: {v['value'] if v['value'] else 'EKSİK'} (Durum: {v['status']})"
-            for k, v in app_data["slots"].items()
-        ])
+
+        # app_data = state.get("appointment_data") or create_initial_appointment_state()
+
+        # # Slot summary
+        # slots_summary = "\n".join([
+        #     f"- {k}: {v['value'] if v['value'] else 'EKSİK'} (Durum: {v['status']})"
+        #     for k, v in app_data["slots"].items()
+        # ])
 
         system_msg = SystemMessage(
             content=f"""
