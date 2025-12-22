@@ -22,7 +22,7 @@ def main() -> None:
     Run with:  poetry run python server_main.py
     """
     load_dotenv(find_dotenv())
-    api_key = os.getenv("SERVER_API_KEY", "dev-key").strip()
+    api_key = os.getenv("AGENTIC_SERVER_API_KEY", "dev-key").strip()
     checkpointer_mode = os.getenv("CHECKPOINTER", "memory").strip()  # "sqlite" or "memory"
     # sqlite_path = os.getenv("SQLITE_PATH", "checkpoints.db")
     sqlite_path = "checkpoints.db"
@@ -33,8 +33,8 @@ def main() -> None:
     )
     server = APIServer(service=service, api_key=api_key)
 
-    server_host = os.getenv("SERVER_HOST", "0.0.0.0").strip()
-    server_port = int(os.getenv("SERVER_PORT", "8081").strip())
+    server_host = os.getenv("AGENTIC_SERVER_HOST", "0.0.0.0").strip()
+    server_port = int(os.getenv("AGENTIC_SERVER_PORT", "8082").strip())
     uvicorn.run(server.app, host=server_host, port=server_port)
 
 
