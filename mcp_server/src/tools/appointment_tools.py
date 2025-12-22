@@ -26,31 +26,36 @@ class AppointmentTools(ToolBase):
 
     # ---------- PUBLIC TOOLS ----------
 
-    def get_available_hospitals(self, city: str = None, district: str = None) -> dict:
+    def get_available_hospitals(self, city: str, district: str = None) -> dict:
         """
         Retrieves a list of active hospitals from the database, optionally filtered by location (City/District).
 
         This tool serves as the initial step for appointment booking or general hospital inquiries.
         It enables the agent to show options to the user before proceeding to department selection.
 
+        --- CRITICAL RULE ---
+        This tool requires a 'city' argument. If the user asks "Show me hospitals"
+        WITHOUT specifying a city, DO NOT call this tool immediately.
+        Instead, ask the user: "Which city are you looking for?"
+
         --- USE CASES (When to use this tool) ---
-        1. User asks generic questions: "Which hospitals are available?", "List all hospitals."
-        2. User specifies a location: "Is there a hospital in Ankara?", "Find hospitals in Kadıköy."
-        3. User wants to book an appointment but hasn't selected a hospital yet.
-        4. User provides a partial location: "Hospitals in Beşiktaş" (Extract 'Beşiktaş' as district).
+        1. User specifies a location: "Is there a hospital in Ankara?", "Find hospitals in Kadıköy."
+        2. User wants to book an appointment but hasn't selected a hospital yet.
+        3. User provides a partial location: "Hospitals in Beşiktaş" (Extract 'Beşiktaş' as district).
 
         --- PARAMETER RULES ---
-        - city (str, Optional): The city name. Must be a full city name (e.g., 'İstanbul', 'Ankara').
-          If the user mentions a district but no city, try to infer the city or leave it None.
-        - district (str, Optional): The specific district/county. (e.g., 'Çankaya', 'Kadıköy').
-          Do not hallucinate districts if not explicitly mentioned or strongly implied.
+        - city (str, REQUIRED): The city name.
+          RULE: This is MANDATORY. You must extract a valid city name (e.g., 'İstanbul', 'İzmir').
+          If the user provided only a district (e.g., 'Çankaya'), you must infer the city (e.g., 'Ankara') or ask the user.
+
+        - district (str, OPTIONAL): The specific district/county.
+          RULE: Send this only if explicitly mentioned. Default is None.
 
         --- BEHAVIOR ---
-        - If NO city or district is provided by the user, this tool MUST be called without arguments to retrieve the full list.
-        - Returns a list of dictionaries containing 'id', 'name', 'city', and 'district'.
+        - Returns a list of dictionaries containing 'id', 'name'.
 
         Returns:
-            On success: {"hospitals": [{"id": "1", "name": "Acıbadem", "city": "İstanbul"}, ...]}
+            On success: {"hospitals": [{"id": "1", "name": "Acıbadem", ...]}
             On error: {"error": "Database connection failed"}
         """
         try:
@@ -59,29 +64,23 @@ class AppointmentTools(ToolBase):
         except Exception as e:
             return {"error": str(e)}
 
-    def get_available_slots(self, hospital_id: str = None, branch: str = None,
-                            doctor_id: str = None, date_str: str = None) -> dict:
+    def get_available_slots(self, doctor_id: str) -> dict:
         """
-        Searches for available appointment slots based on various filters.
+        Searches for available appointment slots based on doctor id.
 
         Use this when the user asks for doctor availability or free times.
 
         Args:
-            hospital_id: Filter by specific hospital ID.
-            branch: Filter by medical specialty (e.g., 'Cardiology').
             doctor_id: Filter by a specific doctor ID.
-            date_str: Filter by a specific date (YYYY-MM-DD).
 
         Returns:
             On success: {"available_slots": [...]}
             On error: {"error": <error message>}
         """
         try:
+            #TODO servis fix
             slots = self.service.get_available_slots(
-                hospital_id=hospital_id,
-                branch=branch,
                 doctor_id=doctor_id,
-                date_str=date_str
             )
             return {"available_slots": slots}
         except Exception as e:
@@ -133,7 +132,7 @@ class AppointmentTools(ToolBase):
         Args:
             doctor_id (str): The unique UUID of the doctor.
                 RULE: Do NOT guess. If the user provided a name (e.g., "Dr. Ayşe"),
-                you must have already resolved it to an ID using 'get_available_slots' or 'get_doctors...'.
+                you must have already resolved it to an ID using 'get_available_slots' or 'get_doctors_by_hospital_and_branch'.
 
             patient_id (str): The unique ID of the patient.
                 RULE: Get this from the current user session/context.
@@ -150,6 +149,7 @@ class AppointmentTools(ToolBase):
             On error: {"error": "The slot 2025-08-10 09:00 is already booked."}
         """
         try:
+            #TODO date time kontrol parametre olarak dict veya date time.
             new_app = self.service.create_appointment(
                 doctor_id=doctor_id,
                 patient_id=patient_id,
@@ -196,6 +196,7 @@ class AppointmentTools(ToolBase):
             On error: {"error": "The slot is already booked."} (Old appointment remains valid)
         """
         try:
+            # TODO date time kontrol parametre olarak dict veya date time.
             updated_app = self.service.update_appointment(
                 appointment_id=appointment_id,
                 new_doctor_id=new_doctor_id,

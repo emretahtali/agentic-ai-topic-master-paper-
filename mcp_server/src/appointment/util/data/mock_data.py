@@ -6,14 +6,14 @@ def str_to_dt(dt_str):
 
 MOCK_DATA = {
     "hospitals": [
-        {"id": "1", "name": "Ankara Şehir Hastanesi", "city": "Ankara", "district": "Çankaya"},
-        {"id": "2", "name": "Ankara Eğitim ve Araştırma Hastanesi", "city": "Ankara", "district": "Çankaya"},
-        {"id": "3", "name": "İstanbul Üniversitesi Çapa Tıp Fakültesi", "city": "İstanbul", "district": "Fatih"},
-        {"id": "4", "name": "Haseki Eğitim ve Araştırma Hastanesi", "city": "İstanbul", "district": "Fatih"},
-        {"id": "5", "name": "Ege Üniversitesi Hastanesi", "city": "İzmir", "district": "Bornova"},
-        {"id": "6", "name": "Bornova Devlet Hastanesi", "city": "İzmir", "district": "Bornova"},
+        {"id": "1", "name": "Medipol Hospital", "city": "Ankara", "district": "Çankaya"},
+        {"id": "2", "name": "Hacettepe Hospital", "city": "Ankara", "district": "Çankaya"},
+        {"id": "3", "name": "Acıbadem Hospital", "city": "İstanbul", "district": "Fatih"},
+        {"id": "4", "name": "Haseki Hospital", "city": "İstanbul", "district": "Fatih"},
+        {"id": "5", "name": "Öztan Hospital", "city": "İzmir", "district": "Bornova"},
+        {"id": "6", "name": "YKB Private Hospital", "city": "İzmir", "district": "Bornova"},
         {"id": "7", "name": "Sorgun Devlet Hastanesi", "city": "Yozgat", "district": "Sorgun"},
-        {"id": "8", "name": "Yozgat Devlet Hastanesi", "city": "Yozgat", "district": "Sorgun"}
+        {"id": "8", "name": "EKABI Hospital", "city": "Yozgat", "district": "Sorgun"}
     ],
 
     "doctors": [

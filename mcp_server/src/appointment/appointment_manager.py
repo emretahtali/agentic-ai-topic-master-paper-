@@ -45,7 +45,7 @@ class AppointmentManager:
 
     # FUNCTIONS
 
-    def get_available_hospitals(self, city: str = None, district: str = None):
+    def get_available_hospitals(self, city, district: str = None):
         """
         Retrieves a list of active hospitals.
 
