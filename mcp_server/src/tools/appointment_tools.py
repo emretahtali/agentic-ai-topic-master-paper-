@@ -1,7 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, Annotated
+from pydantic import Field
 from .tool_base import ToolBase
 from appointment.appointment_manager import AppointmentManager
-
 
 class AppointmentTools(ToolBase):
 
@@ -126,8 +126,15 @@ class AppointmentTools(ToolBase):
         except Exception as e:
             return {"error": str(e)}
 
-    def create_appointment(self, doctor_id: str, patient_id: str,
-                           date_str: str, time_str: str) -> dict:
+    def create_appointment(
+            self,
+            doctor_id: str,
+            patient_id: str,
+            date_str: Annotated[str, Field(
+                description="The date of the appointment in STRICT 'YYYY-MM-DD' format. Calculate relative dates (like 'tomorrow') based on the current date.")],
+            time_str: Annotated[
+                str, Field(description="The time of the appointment in STRICT 'HH:MM' format (24-hour clock).")]
+    ) -> dict:
         """
         Finalizes and creates a new medical appointment in the system.
 
@@ -142,24 +149,22 @@ class AppointmentTools(ToolBase):
         Args:
             doctor_id (str): The unique UUID of the doctor.
                 RULE: Do NOT guess. If the user provided a name (e.g., "Dr. Ayşe"),
-                you must have already resolved it to an ID using 'get_available_slots' or 'get_doctors_by_hospital_and_branch'.
+                you must have already resolved it to an ID using 'get_available_slots'.
 
             patient_id (str): The unique ID of the patient.
                 RULE: Get this from the current user session/context.
 
             date_str (str): The date of the appointment.
-                RULE: STRICT FORMAT "YYYY-MM-DD". You must convert relative dates
-                (e.g., "tomorrow", "next Friday", "12th of August") to this exact format.
+                RULE: STRICT FORMAT "YYYY-MM-DD".
 
             time_str (str): The time of the appointment.
-                RULE: STRICT FORMAT "HH:MM" (24-hour clock). Example: "09:00", "14:30".
+                RULE: STRICT FORMAT "HH:MM".
 
         Returns:
             On success: {"result": {"id": "...", "status": "BOOKED", ...}}
             On error: {"error": "The slot 2025-08-10 09:00 is already booked."}
         """
         try:
-            #TODO date time kontrol parametre olarak dict veya date time.
             new_app = self.service.create_appointment(
                 doctor_id=doctor_id,
                 patient_id=patient_id,
@@ -170,8 +175,21 @@ class AppointmentTools(ToolBase):
         except Exception as e:
             return {"error": str(e)}
 
-    def update_appointment(self, appointment_id: str, new_doctor_id: str = None,
-                           new_date_str: str = None, new_time_str: str = None) -> dict:
+    def update_appointment(
+            self,
+            appointment_id: Annotated[str, Field(
+                description="The unique UUID of the appointment to update. You MUST identify the correct appointment first using 'get_patient_appointments'."
+            )],
+            new_doctor_id: Annotated[str, Field(
+                description="The ID of the new doctor. Provide ONLY if the user explicitly wants to change the doctor. Otherwise leave None."
+            )] = None,
+            new_date_str: Annotated[str, Field(
+                description="The new date in STRICT 'YYYY-MM-DD' format. Calculate relative dates (like 'tomorrow') based on current date. Leave None if date is unchanged."
+            )] = None,
+            new_time_str: Annotated[str, Field(
+                description="The new time in STRICT 'HH:MM' format. Leave None if time is unchanged."
+            )] = None
+    ) -> dict:
         """
         Modifies an existing appointment's details (Time, Date, or Doctor).
 
@@ -183,30 +201,15 @@ class AppointmentTools(ToolBase):
         2. Swapping Doctor: User says "Actually, I want to see Dr. House instead."
         3. Correction: User realizes they picked the wrong date and wants to fix it.
 
-        --- CRITICAL RULES FOR ARGUMENTS ---
-        Args:
-            appointment_id (str): The unique UUID of the appointment to update.
-                RULE: You MUST identify the correct appointment first using 'get_patient_appointments'.
-                Never hallucinate this ID. If the user has multiple appointments, ask them which one to change.
-
-            new_doctor_id (str, optional): The ID of the new doctor.
-                RULE: Provide ONLY if the user explicitly wants to change the doctor.
-                If the doctor remains the same, send None.
-
-            new_date_str (str, optional): The new date.
-                RULE: STRICT FORMAT "YYYY-MM-DD". Convert "next week", "tomorrow" to this format.
-                If the date remains the same (e.g., only changing time), send None.
-
-            new_time_str (str, optional): The new time.
-                RULE: STRICT FORMAT "HH:MM".
-                If the time remains the same (e.g., only changing doctor), send None.
+        --- CRITICAL RULES ---
+        - You generally only need to send the field that is changing.
+        - If the user changes ONLY the time, send new_time_str and leave new_date_str as None.
 
         Returns:
             On success: {"result": {"id": "...", "status": "BOOKED", ...}} (New appointment object)
             On error: {"error": "The slot is already booked."} (Old appointment remains valid)
         """
         try:
-            # TODO date time kontrol parametre olarak dict veya date time.
             updated_app = self.service.update_appointment(
                 appointment_id=appointment_id,
                 new_doctor_id=new_doctor_id,
