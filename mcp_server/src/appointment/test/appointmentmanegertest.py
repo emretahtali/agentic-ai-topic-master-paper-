@@ -11,7 +11,7 @@ logger = logging.getLogger("AppointmentSystem")
 service = AppointmentManager()
 
 app1 = None
-current_patient_id = "patient_1"
+current_patient_id = "123456789"
 test_doctor_id = "101"
 test_date = "2025-08-10"
 

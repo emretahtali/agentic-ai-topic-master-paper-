@@ -26,14 +26,14 @@ MOCK_DATA = {
     ],
 
     "patients": [
-        Patient(id="patient_1", name="Demo Hasta", age = 25)
+        Patient(id="123456789", name="Demo Hasta", age = 25)
     ],
 
     "appointments": [
         Appointment(
             id="6500c262-8ecf-46a9-a1ec-f50eb7f4f9aa",
             doctor_id="201",
-            patient_id="patient_1",
+            patient_id="123456789",
             hospital_id="2",
             start_time=str_to_dt("2025-08-14 08:50"),
             end_time=str_to_dt("2025-08-14 09:20"),
@@ -42,7 +42,7 @@ MOCK_DATA = {
         Appointment(
             id="7cb80365-b031-4784-9c68-2fef90c5ccbf",
             doctor_id="101",
-            patient_id="patient_1",
+            patient_id="123456789",
             hospital_id="2",
             start_time=str_to_dt("2025-08-19 09:00"),
             end_time=str_to_dt("2025-08-19 09:30"),
