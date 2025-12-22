@@ -31,33 +31,59 @@ async def test():
     from langchain_core.messages import HumanMessage
 
     try:
-        logger.info(f"Initializing MCP Client for {diagnosis_mcp.label}")
+        logger.info(f"Initializing MCP Client for {diagnosis_mcp.label}...")
         await diagnosis_mcp.initialize()
 
-        logger.info("Instantiating DiagnosisAgent")
+        logger.info("Instantiating DiagnosisAgent...")
         agent = DiagnosisAgent()
 
+        # Define Initial State with the Example Message
+        example_content = "My chest has been feeling very tight and I am having trouble breathing."
 
-        initial_state: AgentState = {"messages": [
-            HumanMessage(content="My chest has been feeling very tight and I am having trouble breathing.")],
-            "intermediate_steps": [], "agent_outcome": None}
-        logger.info("Input Message: {}", initial_state["messages"][0].content)
+        state: AgentState = {"messages": [HumanMessage(content=example_content)], "intermediate_steps": [],
+            "agent_outcome": None}
 
-        logger.info("Invoking _get_node")
-        result = await agent._get_node(initial_state)
+        logger.success("Diagnosis Agent ready. Starting with example message.")
+        print("-" * 50)
+        print(f"👤 User (Example): {example_content}")
 
-        ai_msg = result["messages"][0]
+        # Message Loop
+        while True:
 
-        if ai_msg.tool_calls:
-            for tool_call in ai_msg.tool_calls:
-                logger.info(f"AI requested tool call: {tool_call['name']} with args: {tool_call['args']}")
-        else:
-            logger.info(f"AI RESPONSE: {ai_msg.content}")
+            result = await agent._get_node(state)
 
-        logger.success("Integration test completed successfully.")
+            # Extract AI response and update state to maintain history
+            ai_msg = result["messages"][0]
+            state["messages"].append(ai_msg)
+
+            # Display AI Output
+            if ai_msg.tool_calls:
+                for tool_call in ai_msg.tool_calls:
+                    logger.warning(f"🛠️  TOOL CALL REQUESTED: {tool_call['name']} -> {tool_call['args']}")
+                if not ai_msg.content:
+                    print(f"🤖 AI: [Attempting to call {ai_msg.tool_calls[0]['name']}...]")
+
+            if ai_msg.content:
+                print(f"🤖 AI: {ai_msg.content}")
+
+            # --- USER TURN ---
+            print("-" * 50)
+            user_input = input("👤 User (Type 'exit' to stop): ")
+
+            if user_input.lower() in ["exit", "quit", "q"]:
+                logger.info("Exiting test loop.")
+                break
+
+            if not user_input.strip():
+                continue
+
+            # Add user input to state for the next iteration
+            state["messages"].append(HumanMessage(content=user_input))
 
     except Exception as e:
-        logger.error(e)
+        logger.error(f"Test loop failed: {e}")
+    finally:
+        logger.info("Test session closed.")
 
 
 if __name__ == "__main__":
