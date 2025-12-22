@@ -15,67 +15,66 @@ current_patient_id = "patient_1"
 test_doctor_id = "101"
 test_date = "2025-08-10"
 
-print("\n--- TEST 1: Mock Doktor Listesi ---")
+print("\n--- TEST 1: Mock Doctor List ---")
 docs = service.get_doctors_by_hospital_and_branch("1", "Kardiyoloji")
-print(f"Gelen Doktorlar: {docs}")
+print(f"Retrieved Doctors: {docs}")
 
-print("\n--- TEST 2: Başarılı Randevu Oluşturma ---")
+print("\n--- TEST 2: Successful Appointment Creation ---")
 try:
     app1 = service.create_appointment(test_doctor_id, current_patient_id, test_date, "09:00")
-    logger.info(f"Randevu Oluşturuldu. ID: {app1.id}")
+    logger.info(f"Appointment Created. ID: {app1.id}")
 except Exception as e:
-    logger.error(f"Test 2 Hata: {e}")
+    logger.error(f"Test 2 Error: {e}")
 
-print("\n--- TEST 3: Başarılı Güncelleme (Saat Değişimi) ---")
+print("\n--- TEST 3: Successful Update (Time Change) ---")
 if app1:
     try:
         new_app1 = service.update_appointment(app1.id, new_time_str="10:30")
-        logger.info(f"Randevu Güncellendi. Yeni ID: {new_app1.id}")
-        logger.info(f"Yeni Randevu Zamanı: {new_app1.start_time}")
+        logger.info(f"Appointment Updated. New ID: {new_app1.id}")
+        logger.info(f"New Appointment Time: {new_app1.start_time}")
     except Exception as e:
-        logger.error(f"Test 3 Hata: {e}")
+        logger.error(f"Test 3 Error: {e}")
 else:
-    logger.error("⚠️ Test 2 başarısız olduğu için Test 3 çalıştırılamadı.")
+    logger.error("⚠️ Test 3 could not run because Test 2 failed.")
 
-print("\n--- TEST 4: Randevu İptal (Soft Delte) İşlemi ---")
+print("\n--- TEST 4: Appointment Cancellation (Soft Delete) Process ---")
 app_to_cancel = locals().get('new_app1') if locals().get('new_app1') else app1
 
 if app_to_cancel:
     try:
-        logger.info(f"İptal edilecek Randevu ID: {app_to_cancel.id}")
+        logger.info(f"Appointment ID to Cancel: {app_to_cancel.id}")
 
         cancel_response = service.cancel_appointment(app_to_cancel.id)
-        logger.info(f"İşlem Sonucu: {cancel_response}")
+        logger.info(f"Operation Result: {cancel_response}")
 
         cancelled_app = service.appointments_by_id.get(app_to_cancel.id)
 
         if cancelled_app is not None and cancelled_app.status.name == "CANCELLED":
-            logger.info("✅ DOĞRULAMA BAŞARILI: Randevu duruyor ve statüsü 'CANCELLED' oldu.")
+            logger.info("✅ VERIFICATION SUCCESSFUL: Appointment exists and status is 'CANCELLED'.")
         else:
-            current_status = cancelled_app.status.name if cancelled_app else "YOK"
-            logger.error(f"❌ HATA: Beklenen durum CANCELLED, Mevcut durum: {current_status}")
+            current_status = cancelled_app.status.name if cancelled_app else "NONE"
+            logger.error(f"❌ ERROR: Expected status CANCELLED, Current status: {current_status}")
 
     except Exception as e:
-        logger.error(f"Test 4 Hata: {e}")
+        logger.error(f"Test 4 Error: {e}")
 else:
-    logger.error("⚠️ İptal testi için geçerli bir randevu nesnesi bulunamadı.")
+    logger.error("⚠️ No valid appointment object found for cancellation test.")
 
-print("\n--- TEST 5: Mevcut Hastaneleri Getirme (get_available_hospitals) ---")
+print("\n--- TEST 5: Retrieve Available Hospitals (get_available_hospitals) ---")
 try:
     hospitals = service.get_available_hospitals(city="Yozgat", district="Sorgun")
 
     for h in hospitals:
-
-        print(f"Hastane: {h['name']} (ID: {h['id']})")
+        print(f"Hospital: {h['name']} (ID: {h['id']})")
 
     if len(hospitals) > 0:
-        logger.info("✅ Hastane listesi başarıyla çekildi.")
+        logger.info("✅ Hospital list successfully retrieved.")
 except Exception as e:
-    logger.error(f"Test 5 Hata: {e}")
+    logger.error(f"Test 5 Error: {e}")
 
-print("\n--- TEST 6: Uygunluk Kontrolü (get_available_slots) ---")
+print("\n--- TEST 6: Availability Check (get_available_slots) ---")
 try:
-    logger.info(f"Dr. {test_doctor_id} için {test_date} tarihindeki boşluklar aranıyor...")
+    logger.info(f"Searching for slots for Dr. {test_doctor_id} on {test_date}...")
 
     slots_result = service.get_available_slots(
         doctor_id=test_doctor_id,
@@ -87,25 +86,25 @@ try:
         doctor_schedule = slots_result[0]["schedule"]
         for day_schedule in doctor_schedule:
             if day_schedule["date"] == test_date:
-                print(f"Müsait Saatler: {day_schedule['slots']}")
+                print(f"Available Hours: {day_schedule['slots']}")
                 if "10:30" in day_schedule['slots']:
                     found_1030 = True
 
     if found_1030:
-        logger.info("✅ BAŞARILI: İptal edilen 10:30 saati tekrar müsait olarak listelendi.")
+        logger.info("✅ SUCCESS: The cancelled 10:30 slot is listed as available again.")
     else:
-        logger.warning("⚠️ UYARI: 10:30 saati müsait listesinde görünmüyor! (Mock data config'ine bakılmalı)")
+        logger.warning("⚠️ WARNING: 10:30 slot does not appear in available list! (Check Mock data config)")
 
 except Exception as e:
-    logger.error(f"Test 6 Hata: {e}")
+    logger.error(f"Test 6 Error: {e}")
 
-print("\n--- TEST 7: Hasta Randevularını Getirme (get_patient_appointments) ---")
+print("\n--- TEST 7: Retrieve Patient Appointments (get_patient_appointments) ---")
 try:
     my_appointments = service.get_patient_appointments(current_patient_id)
-    print(f"Hasta ({current_patient_id}) Randevuları: {len(my_appointments)} adet bulundu.")
+    print(f"Patient ({current_patient_id}) Appointments: {len(my_appointments)} found.")
 
     for app in my_appointments:
-        print(f"   - {app['date']} {app['time']} | Dr. {app['doctor']} | Durum: {app['status']}")
+        print(f"   - {app['date']} {app['time']} | Dr. {app['doctor']} | Status: {app['status']}")
 
     if app_to_cancel:
         found_app = next((a for a in my_appointments if a['appointment_id'] == app_to_cancel.id), None)
@@ -114,11 +113,11 @@ try:
             status_text = str(found_app['status']).upper()
 
             if "CANCELLED" in status_text or "İPTAL" in status_text:
-                logger.info(f"✅ DOĞRULAMA BAŞARILI: Randevu listede duruyor ve statüsü '{found_app['status']}' olmuş.")
+                logger.info(f"✅ VERIFICATION SUCCESSFUL: Appointment remains in list and status is '{found_app['status']}'.")
             else:
-                logger.error(f"❌ HATA: Randevu bulundu ama statüsü güncellenmemiş! Durum: {found_app['status']}")
+                logger.error(f"❌ ERROR: Appointment found but status not updated! Status: {found_app['status']}")
         else:
-            logger.error("❌ HATA: Randevu listede hiç bulunamadı! (Soft delete veriyi silmemeliydi)")
+            logger.error("❌ ERROR: Appointment not found in list at all! (Soft delete should not remove data)")
 
 except Exception as e:
-    logger.error(f"Test 7 Hata: {e}")
+    logger.error(f"Test 7 Error: {e}")
