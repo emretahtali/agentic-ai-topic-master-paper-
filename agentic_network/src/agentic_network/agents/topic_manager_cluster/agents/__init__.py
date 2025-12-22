@@ -1,4 +1,3 @@
-from .topic_agent import TopicAgent
 # from .topic_change_checker_agent import TopicChangeCheckerAgent
 # from .previous_topics_checker_agent import PreTopicsCheckerAgent
 from .new_topic_agent import NewTopicAgent

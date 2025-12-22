@@ -2,12 +2,13 @@ from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 
 from agentic_network.agents.topic_manager_cluster.agents import TopicAgent
 from agentic_network.core import AgentState
-from agentic_network.core.topic_manager_util import format_dialog_with_topics, format_dialog
+from agentic_network.utils import BaseAgent
 from llm.core.llm_singletons import llmSingleton
 from llm.core.gemma_based_model_adapter import GemmaBasedModelAdapter
 
 
-class PreTopicsCheckerAgent(TopicAgent):
+
+class PreTopicsCheckerAgent(BaseAgent):
     def __init__(self):
         pass
 

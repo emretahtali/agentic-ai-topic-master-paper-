@@ -1,13 +1,14 @@
-from mcp_client import mcp_client
-from langchain_core.tools.base import ToolException
-from pydantic import ValidationError
 import json
+from pydantic import ValidationError
 
-from agentic_network.agents import Agent
+from langchain_core.tools.base import ToolException
+
+from agentic_network.utils import BaseAgent
 from agentic_network.core import AgentState
+from mcp_client import mcp_client
 
 
-class ToolsAgent(Agent):
+class ToolsAgent(BaseAgent):
     def __init__(self):
         tools = mcp_client.get_tools()
         self.tools_by_name = {t.name: t for t in tools}

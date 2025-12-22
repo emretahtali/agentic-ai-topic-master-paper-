@@ -6,14 +6,14 @@ from langchain_core.tools import BaseTool
 from langchain_classic.tools.render import render_text_description
 from datetime import datetime
 
-from agentic_network.agents import Agent
+from agentic_network.utils import BaseAgent
 from agentic_network.core import AgentState
-from agentic_network.util import CustomReActParser, create_custom_react_agent, count_messages
+# from agentic_network.utils import CustomReActParser, create_custom_react_agent, count_messages
 from mcp_client import mcp_client
 from llm import get_llm
 
 
-class AssistantAgent(Agent):
+class AssistantAgent(BaseAgent):
     model: Runnable
 
     def __init__(self):
