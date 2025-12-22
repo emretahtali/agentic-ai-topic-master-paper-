@@ -23,7 +23,7 @@ class MCPClient:
 
     async def _initialize_client(self):
         # TODO: Fallback url
-        mcp_server_endpoint = os.getenv(f"{self.label.upper()}_MCP_URL", "")
+        mcp_server_endpoint = os.getenv(f"{self.label.upper()}_ENDPOINT", "")
 
         logger.info(f"[{self.label}] Connecting to MCP server on:", mcp_server_endpoint)
 
