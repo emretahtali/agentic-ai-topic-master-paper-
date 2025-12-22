@@ -25,7 +25,7 @@ class MCPServer:
                 if not name.startswith('_'):
                     self.mcp.tool()(method)
 
-    def run(self, transport: Literal["stdio", "http", "sse", "streamable-http"] = "stdio", **kwargs):
+    def run(self, transport: Literal["stdio", "http", "sse", "streamable-http"] = "sse", **kwargs):
         self.mcp.run(transport=transport, **kwargs)
 
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         port = 8080
 
         print(f"Starting MCP Server '{SERVER_NAME}'")
-        mcp_server.run(transport="stdio", host="0.0.0.0", port=port)
+        mcp_server.run(transport="sse", host="0.0.0.0", port=port)
 
     except Exception as e:
         print(f"Error: {e}")

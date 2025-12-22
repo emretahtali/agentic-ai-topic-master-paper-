@@ -8,8 +8,8 @@ from llm.client_types import get_llm_openai, get_llm_gemini
 
 
 class LLMModel(StrEnum):
-    GEMINI = auto()
-    OPENAI = auto()
+    GEMINI = "GEMINI"
+    OPENAI = "OPENAI"
 
 
 def get_llm(model_name:str, llm_key: str, llm_endpoint: Optional[str]="", llm_type: LLMModel = LLMModel.GEMINI) -> BaseChatModel:

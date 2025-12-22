@@ -9,4 +9,3 @@ class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     intermediate_steps: Annotated[list[tuple[AgentAction, str]], operator.add]
     agent_outcome: Optional[Union[AgentAction, AgentFinish, None]]
-    appointment_data: Optional[AppointmentState]

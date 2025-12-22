@@ -8,7 +8,10 @@ load_dotenv(find_dotenv())
 
 llm_endpoint = os.getenv("APPOINTMENT_LLM_API_ENDPOINT").strip()
 llm_key = os.getenv("APPOINTMENT_LLM_API_KEY").strip()
-llm_type = LLMModel(os.getenv("APPOINTMENT_LLM_TYPE", LLMModel.GEMINI))
+llm_type = LLMModel(LLMModel(os.getenv("APPOINTMENT_LLM_TYPE", "GEMINI")))
 model_name = os.getenv("APPOINTMENT_LLM_MODEL_NAME", "gemini-2.5-flash").strip()
 
 appointment_llm = get_llm(llm_type=llm_type, llm_endpoint=llm_endpoint, llm_key=llm_key, model_name=model_name)
+
+if __name__ == "__main__":
+    print(appointment_llm.dict())

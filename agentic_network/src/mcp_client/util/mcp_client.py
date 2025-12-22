@@ -24,13 +24,14 @@ class MCPClient:
     async def _initialize_client(self):
         # TODO: Fallback url
         mcp_server_endpoint = os.getenv(f"{self.label.upper()}_ENDPOINT", "")
+        mcp_server_endpoint += f":{self.port}/sse"
 
         logger.info(f"[{self.label}] Connecting to MCP server on:", mcp_server_endpoint)
 
         mcp_server_configs = {
             "mcp_tools_server": {
                 "url": mcp_server_endpoint,
-                "transport": "stdio"
+                "transport": "sse"
             }
         }
 
@@ -42,5 +43,5 @@ class MCPClient:
             logger.info(f"[{self.label}] Successfully fetched a total of {len(self.toolset)} tools from server")
 
         except Exception as e:
-            logger.error(f"[{self.label}]MCP Client: Failed to connect or fetch tools: {e}")
+            logger.error(f"[{self.label}] MCP Client: Failed to connect or fetch tools: {e}")
             exit(1)

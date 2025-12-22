@@ -13,27 +13,27 @@ def start_appointment_mcp():
     load_dotenv(find_dotenv())
 
     SERVER_NAME = "appointment_server"
-    port = int(os.getenv(f"{SERVER_NAME.upper()}_PORT", 8080))
+    port = int(os.getenv(f"{SERVER_NAME.upper()}_PORT", 8081))
     host = "0.0.0.0"
 
     logger.info(f"Running Appointment MCP Server (Port: {port}, host:{host})")
     server = MCPServer(SERVER_NAME)
     server.register_tools(tool_instances=[AppointmentTools()])
-    server.run(transport="stdio", host=host, port=port)
+    server.run(transport="sse", host=host, port=port)
 
 
 def start_diagnosis_mcp():
     load_dotenv(find_dotenv())
 
     SERVER_NAME = "diagnosis_server"
-    port = int(os.getenv(f"{SERVER_NAME.upper()}_PORT", 8081))
+    port = int(os.getenv(f"{SERVER_NAME.upper()}_PORT", 8080))
     host = "0.0.0.0"
 
     logger.info(f"Running Diagnosis MCP Server (Port: {port}, host:{host})")
     server = MCPServer(SERVER_NAME)
     # TODO: Tools class will be given
     server.register_tools(tool_instances=[])
-    server.run(transport="stdio", host=host, port=port)
+    server.run(transport="sse", host=host, port=port)
 
 def main():
     p1 = multiprocessing.Process(target=start_appointment_mcp)
