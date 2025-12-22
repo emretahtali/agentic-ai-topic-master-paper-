@@ -2,6 +2,7 @@ from dotenv import load_dotenv, find_dotenv
 from agentic_network.agents.topic_manager_cluster.agents.new_topic_agent import NewTopicAgent
 from langchain_core.messages import HumanMessage, AIMessage
 from agentic_network.agents.topic_manager_cluster.core.topic_manager_state import TopicManagerState
+from agentic_network.core import AgentState
 
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -12,8 +13,10 @@ load_dotenv(find_dotenv())
 def main():
     agent = NewTopicAgent()
     state = TopicManagerState(
+        agentic_state=AgentState(),
         current_message = HumanMessage("I have a strong headache. What should i do?"),
         topic_stack = [],
+        disclosed_topics = [],
         topic_selected = False
     )
     state.update(agent(state))

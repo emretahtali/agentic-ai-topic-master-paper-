@@ -10,6 +10,7 @@ from agentic_network.agents.topic_manager_cluster.core.topic_manager_state impor
     TopicManagerState,
     TopicState,
 )
+from agentic_network.core import AgentState
 
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -20,6 +21,7 @@ load_dotenv(find_dotenv())
 def main():
     agent = TopicChangeCheckerAgent()
     state = TopicManagerState(
+        agentic_state=AgentState(),
         # current_message = HumanMessage("Yes please."),
         current_message = HumanMessage("Actually never mind, I want to make an appointment for orthopedics."),
         topic_stack = [
@@ -33,6 +35,7 @@ def main():
                 agent=AgentData.Agents.diagnosis_agent
             )
         ],
+        disclosed_topics = [],
         topic_selected = False
     )
     state.update(agent(state))

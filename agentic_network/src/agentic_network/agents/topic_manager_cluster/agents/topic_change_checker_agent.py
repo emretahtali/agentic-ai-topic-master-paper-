@@ -2,7 +2,7 @@ from typing import Literal
 
 from langchain.agents import create_agent
 from langchain.agents.structured_output import ProviderStrategy
-from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel
 
@@ -12,9 +12,9 @@ from agentic_network.agents.topic_manager_cluster.utils.topic_manager_util impor
     get_current_topic,
     format_dialog,
 )
-from agentic_network.agents import AgentData
 from agentic_network.utils import BaseAgent
 from llm.llm_client import get_llm, LLMModel
+
 
 class ResponseModel:
     class Choices:
@@ -62,16 +62,23 @@ class TopicChangeCheckerAgent(BaseAgent):
         cur_topic_messages = cur_topic.get("messages", [])
 
         current_message = agent_state["current_message"]
-        system_prompt = self._get_system_prompt(format_dialog(cur_topic_messages), current_message.content)
-        system_message = SystemMessage(system_prompt)
+        system_message = SystemMessage(self._get_system_prompt(format_dialog(cur_topic_messages), current_message.content))
 
-        response = self.agent.invoke({"messages": [system_message, HumanMessage(content="Follow the instruction above and answer.")]})
-        final_answer = response["structured_response"].final_answer
+        response = self.agent.invoke(
+            {
+                "messages": [
+                    system_message,
+                    HumanMessage(content="Follow the instruction above and answer."),
+                ]
+            }
+        )
+        final_answer = response["structured_response"].final_answer.upper()
 
         return {
             "topic_selected": final_answer == ResponseModel.Choices.same_topic,
         }
 
+    @staticmethod
     def _get_system_prompt(self, cur_topic_messages: str, current_message: str) -> str:
         return f"""You are part of an AI assistant designed to help users with medical conditions get diagnosed and get hospital appointments. Your primary goal is to provide helpful, precise, and clear responses.
 

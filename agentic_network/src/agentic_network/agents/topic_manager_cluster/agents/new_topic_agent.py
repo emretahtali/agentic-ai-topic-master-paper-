@@ -38,11 +38,17 @@ class NewTopicAgent(BaseAgent):
         print("[NewTopicAgent] Running agent...")
 
         current_message = agent_state.get("current_message")
-        system_prompt = self._get_system_prompt(current_message.content)
-        system_message = SystemMessage(system_prompt)
+        system_message = SystemMessage(self._get_system_prompt(current_message.content))
 
-        response = self.agent.invoke({"messages": [system_message, HumanMessage(content="Follow the instruction above and answer.")]})
-        selected_agent = response["structured_response"].agent
+        response = self.agent.invoke(
+            {
+                "messages": [
+                    system_message,
+                    HumanMessage(content="Follow the instruction above and answer."),
+                ]
+            }
+        )
+        selected_agent = response["structured_response"].agent.upper()
         messages = response["messages"]
 
         print("[NewTopicAgent] New topic is created with agent:", selected_agent)
@@ -53,6 +59,7 @@ class NewTopicAgent(BaseAgent):
             "topic_selected": True
         }
 
+    @staticmethod
     def _get_system_prompt(self, message: str) -> str:
         return f"""You are part of a medical assistant. Your sole task is **agent routing for a new topic**: based ONLY on the latest user message, choose which specialized agent should handle it.
 

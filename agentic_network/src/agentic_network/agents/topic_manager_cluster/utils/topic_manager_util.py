@@ -2,10 +2,9 @@ from typing import Optional, Literal, Iterable
 from uuid import uuid4
 
 from agentic_network.agents import AgentData
+from agentic_network.agents.topic_manager_cluster.agents.topic_change_checker_agent import ResponseModel
 from agentic_network.agents.topic_manager_cluster.core.topic_manager_state import TopicState
 from agentic_network.core import AgentState
-# from agentic_network.core import GraphRoutes
-# from agentic_network.core.agent_state import Topic
 from agentic_network.agents.topic_manager_cluster.core import TopicManagerState, TopicManagerRoutes
 from langchain_core.messages import (
     AnyMessage,
@@ -22,11 +21,34 @@ def _new_id() -> str:
 
 
 # ----- API -----
-# def find_topic_index(topics: list[Topic], topic_id: str) -> int:
-#     for i, topic in enumerate(topics):
-#         if topic["id"] == topic_id:
-#             return i
-#     return -1
+def strip_quotes(s: str) -> str:
+    while len(s) >= 2 and ((s[0] == '"' and s[-1] == '"') or (s[0] == "'" and s[-1] == "'")):
+        s = s[1:-1]
+    return s
+
+
+def strip_braces(s: str) -> str:
+    s = s.strip()
+
+    if s.startswith("{"):
+        if s.endswith("}"): s =  s[1:-1].strip()
+        else: s = s[1:].strip()
+    elif s.endswith("}"): s = s[:-1].strip()
+
+    if s.startswith("["):
+        if s.endswith("]"): s =  s[1:-1].strip()
+        else: s = s[1:].strip()
+    elif s.endswith("]"): s = s[:-1].strip()
+
+    return s
+
+
+def find_topic_index(topic_id: str, topic_stack: list[TopicState]) -> int:
+    topic_id = strip_quotes(topic_id)
+    for i, topic in enumerate(topic_stack):
+        if topic["id"] == topic_id:
+            return i
+    return -1
 
 
 def get_current_topic(agent_state: TopicManagerState) -> Optional[TopicState]:
@@ -56,6 +78,7 @@ def create_topic(state: TopicManagerState, agent: AgentData.agent_literals) -> T
     #     },
     # }
     return {
+        "id": _new_id(),
         "messages": [state.get("current_message")],
         "agent": agent,
     }
@@ -84,28 +107,31 @@ def disclose_current_topic(state: AgentState) -> AgentState:
     }
 
 
-def resurface_topic(state: AgentState, topic_id: str) -> AgentState:
+def resurface_topic(state: TopicManagerState, topic_id: str) -> dict:
     """
     Find a topic by id in either topic_stack or disclosed_topics,
     and bring it to the top of topic_stack. Removes it from wherever it was.
     No-op if not found anywhere.
     """
-    stack = list(state.get("topic_stack") or [])
+    topic_stack = state.get("topic_stack") or []
     disclosed = list(state.get("disclosed_topics") or [])
 
     # 1) Try stack first: move to top if present
-    idx = find_topic_index(stack, topic_id)
+    idx = find_topic_index(topic_id, topic_stack)
     if idx != -1:
-        topic = stack[idx]
-        new_stack = stack[:idx] + stack[idx + 1:] + [topic]
-        return {"topic_stack": new_stack}
+        topic = topic_stack[idx]
+        new_stack = topic_stack[:idx] + topic_stack[idx + 1:] + [topic]
+
+        return {
+            "topic_stack": new_stack
+        }
 
     # 2) Else try disclosed: remove from disclosed and push onto stack
-    didx = find_topic_index(disclosed, topic_id)
-    if didx != -1:
-        topic = disclosed[didx]
-        new_disclosed = disclosed[:didx] + disclosed[didx + 1:]
-        new_stack = stack + [topic]
+    d_idx = find_topic_index(topic_id, disclosed)
+    if d_idx != -1:
+        topic = disclosed[d_idx]
+        new_disclosed = disclosed[:d_idx] + disclosed[d_idx + 1:]
+        new_stack = topic_stack + [topic]
         return {
             "topic_stack": new_stack,
             "disclosed_topics": new_disclosed,
