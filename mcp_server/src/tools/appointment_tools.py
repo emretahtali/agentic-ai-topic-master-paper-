@@ -66,22 +66,32 @@ class AppointmentTools(ToolBase):
 
     def get_available_slots(self, doctor_id: str) -> dict:
         """
-        Searches for available appointment slots based on doctor id.
+        Retrieves the full list of available appointment slots for a KNOWN doctor.
 
-        Use this when the user asks for doctor availability or free times.
+        This tool returns the doctor's entire schedule.
+        Use it after the user has selected a specific doctor to see when they are free.
 
+        --- CRITICAL RULE ---
+        You MUST know the 'doctor_id' before calling this tool.
+        Do not use this tool for general searches like "Find a cardiologist".
+        First find the doctor, then call this tool to get their hours.
+
+        --- USE CASES ---
+        1. User asks: "When is Dr. Ali available?" (Resolve Dr. Ali -> ID first).
+        2. User asks: "What are the working hours of this doctor?"
+
+        --- ARGUMENTS ---
         Args:
-            doctor_id: Filter by a specific doctor ID.
+            doctor_id (str, REQUIRED): The unique identifier of the doctor.
+                RULE: You must extract this from the output of 'get_doctors_by_hospital_and_branch'.
+                Never guess or hallucinate an ID.
 
         Returns:
-            On success: {"available_slots": [...]}
-            On error: {"error": <error message>}
+            On success: {"available_slots": [{"doctor_name": "...", "schedule": [{"date": "...", "slots": [...]}]}]}
+            On error: {"error": "Doctor not found" or other messages}
         """
         try:
-            #TODO servis fix
-            slots = self.service.get_available_slots(
-                doctor_id=doctor_id,
-            )
+            slots = self.service.get_available_slots(doctor_id=doctor_id)
             return {"available_slots": slots}
         except Exception as e:
             return {"error": str(e)}

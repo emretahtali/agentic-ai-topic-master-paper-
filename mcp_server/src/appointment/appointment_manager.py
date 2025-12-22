@@ -71,76 +71,42 @@ class AppointmentManager:
             for h in self.hospitals
         ]
 
-    def get_available_slots(self, hospital_id: str = None, branch: str = None, doctor_id: str = None,
-                            date_str: str = None):
+    def get_available_slots(self, doctor_id: str):
         """
-        Searches for available appointment slots based on various filters.
-
-        This tool is the PRIMARY search engine for finding free time slots.
-        Use it when the user asks: "Is Dr. X available?", "Find me a cardiologist in City Hospital",
-        or "What times are free on Friday?".
-
-        Search Logic:
-        1. Filters doctors by Hospital, Branch, or specific Doctor ID.
-        2. Looks up the 'Availability Map' (Working hours) for each doctor.
-        3. Cross-references with existing 'Appointments' to exclude booked slots.
-
-        Parameters:
-        - hospital_id (str, OPTIONAL): Filter by specific hospital ID.
-        - branch (str, OPTIONAL): Filter by medical specialty (e.g., 'Cardiology').
-        - doctor_id (str, OPTIONAL): Filter by a specific doctor.
-        - date_str (str, OPTIONAL): Filter by a specific date (YYYY-MM-DD). If None, returns all future slots.
-
-        Returns:
-        - list: A structured list of available slots formatted as:
-          [
-            {
-              "doctor_name": "Dr. House",
-              "branch": "Diagnostic",
-              "date": "2025-10-10",
-              "slots": ["09:00", "09:30", ...] // Only FREE slots
-            },
-            ...
-          ]
+        Retrieves ALL available time slots for a SPECIFIC doctor.
         """
+        doctor = next((d for d in self.doctors if d.id == doctor_id), None)
+        if not doctor:
+            return []
+
         results = []
 
-        # 1. Filter relevant doctors using helper
-        target_doctors = self._filter_doctors(hospital_id, branch)
-        if doctor_id:
-            target_doctors = [d for d in target_doctors if d.id == doctor_id]
+        schedule = self.availability_map.get(doctor.id, {})
 
-        for doctor in target_doctors:
-            # Get doctor's working schedule
-            schedule = self.availability_map.get(doctor.id, {})
+        doctor_availability = {
+            "doctor_name": doctor.name,
+            "doctor_id": doctor.id,
+            "branch": doctor.branch,
+            "schedule": []
+        }
 
-            doctor_availability = {
-                "doctor_name": doctor.name,
-                "doctor_id": doctor.id,
-                "branch": doctor.branch,
-                "schedule": []
-            }
+        for day, slots in schedule.items():
 
-            for day, slots in schedule.items():
-                # Apply date filter if provided
-                if date_str and day != date_str:
-                    continue
+            free_slots = []
+            for time_s in slots:
+                dt_check = datetime.strptime(f"{day} {time_s}", "%Y-%m-%d %H:%M")
 
-                # Check real availability using helper
-                free_slots = []
-                for time_s in slots:
-                    dt_check = datetime.strptime(f"{day} {time_s}", "%Y-%m-%d %H:%M")
-                    if not self._is_slot_booked(doctor.id, dt_check):
-                        free_slots.append(time_s)
+                if not self._is_slot_booked(doctor.id, dt_check):
+                    free_slots.append(time_s)
 
-                if free_slots:
-                    doctor_availability["schedule"].append({
-                        "date": day,
-                        "slots": free_slots
-                    })
+            if free_slots:
+                doctor_availability["schedule"].append({
+                    "date": day,
+                    "slots": free_slots
+                })
 
-            if doctor_availability["schedule"]:
-                results.append(doctor_availability)
+        if doctor_availability["schedule"]:
+            results.append(doctor_availability)
 
         return results
 
