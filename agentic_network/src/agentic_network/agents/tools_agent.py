@@ -1,4 +1,4 @@
-from mcp_client import mcp_client
+from mcp_client.util import mcp_client
 from langchain_core.tools.base import ToolException
 from pydantic import ValidationError
 import json

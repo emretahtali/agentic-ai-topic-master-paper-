@@ -1,1 +1,2 @@
-from .mcp_client import mcp_client
+from .appointment_mcp import appointment_mcp
+from .diagnosis_mcp import diagnosis_mcp

@@ -9,7 +9,7 @@ from datetime import datetime
 from agentic_network.agents import Agent
 from agentic_network.core import AgentState
 from agentic_network.util import CustomReActParser, create_custom_react_agent, count_messages
-from mcp_client import mcp_client
+from mcp_client.util import mcp_client
 from llm import get_llm
 
 

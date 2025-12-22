@@ -1,7 +1,6 @@
 from fastmcp import FastMCP
 from dotenv import find_dotenv, load_dotenv
 import inspect
-import os
 from typing import Literal
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse

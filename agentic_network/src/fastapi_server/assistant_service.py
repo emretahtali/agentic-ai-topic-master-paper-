@@ -2,12 +2,12 @@ from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.agents import AgentFinish
 from fastapi import HTTPException
-from typing import Any, Dict, Optional, Literal
+from typing import Any, Dict, Optional
 import uuid, asyncio
 
 from agentic_network.agent_graph import AgentGraph
 from agentic_network.core import AgentState
-from mcp_client import mcp_client
+from mcp_client.util import mcp_client
 
 
 class AssistantService:
