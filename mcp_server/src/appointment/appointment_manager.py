@@ -45,20 +45,29 @@ class AppointmentManager:
 
     # FUNCTIONS
 
-    def get_available_hospitals(self, city: str, district: str):
+    def get_available_hospitals(self, city: str = None, district: str = None):
         """
-        Retrieves a list of all active hospitals registered in the system with specific city and district.
+        Retrieves a list of active hospitals.
 
-        This tool MUST be used when:
-        - The user asks "Which hospitals are available?"
-        - The user wants to know the locations where they can book an appointment.
-        - The user is browsing options before selecting a specific department.
+        This tool allows filtering by location (City and District).
+        Even if the user does not provide a location, this tool should be called to list all options.
+
+        Args:
+            city (str, Optional): The city name extracted from user query (e.g., "İstanbul", "Ankara").
+            district (str, Optional): The district/county name (e.g., "Kadıköy", "Çankaya").
 
         Returns:
-            list: A list of dictionaries containing hospital ID, name, and city.
+            list: A list of dictionaries containing hospital ID and name.
+
+        Example Usage:
+            # User: "Hospitals in Kadıköy"
+            get_available_hospitals(city="İstanbul", district="Kadıköy")
+
+            # User: "Show me all hospitals"
+            get_available_hospitals()
         """
         return [
-            {"id": h.id, "name": h.name}
+            {"id": h["id"], "name": h["name"]}
             for h in self.hospitals
         ]
 
@@ -144,25 +153,29 @@ class AppointmentManager:
         - The user wants to check the status of their bookings.
         - The user wants to know the time of their next visit.
 
-        Parameters:
-        - patient_id (str, REQUIRED): The unique ID of the patient.
+        Args:
+            patient_id (str): The unique identifier of the patient whose appointments are being requested.
 
         Returns:
-        - list: A list of appointment objects with Doctor names and locations resolved.
+            list: A list of dictionaries, where each dictionary represents an appointment
+                  with resolved Doctor name, Hospital name, and current status.
         """
         patient_apps = []
+
         for app in self.appointments:
             if app.patient_id == patient_id:
-                # Resolve relationships for clearer output
+
                 doc = next((d for d in self.doctors if d.id == app.doctor_id), None)
-                hosp = next((h for h in self.hospitals if h.id == app.hospital_id), None)
+                hosp = next((h for h in self.hospitals if h['id'] == app.hospital_id), None)
 
                 patient_apps.append({
                     "appointment_id": app.id,
                     "date": app.start_time.strftime("%Y-%m-%d"),
                     "time": app.start_time.strftime("%H:%M"),
-                    "doctor": doc.name if doc else "Unknown",
-                    "hospital": hosp.name if hosp else "Unknown",
+
+                    "doctor": doc.name if doc else "Unknown Doctor",
+                    "hospital": hosp['name'] if hosp else "Unknown Hospital",
+
                     "status": app.status.value
                 })
 
@@ -194,8 +207,8 @@ class AppointmentManager:
         if app.status == AppointmentStatus.CANCELLED:
             return {"message": "Appointment is already cancelled.", "status": "ALREADY_CANCELLED"}
 
-        app.status = AppointmentStatus.AVAILABLE
-        print(f"❌ Appointment {appointment_id} cancelled successfully.")
+        app.status = AppointmentStatus.CANCELLED
+        print(f"Appointment {appointment_id} cancelled successfully.")
 
         return {
             "message": "Appointment cancelled successfully.",
@@ -354,10 +367,10 @@ class AppointmentManager:
                 if app.id != old_appointment.id:
                     raise ValueError("Seçilen yeni tarih/saat maalesef dolu.")
 
-        print(f"🔄 Randevu güncelleniyor: {appointment_id}...")
+        print(f"Randevu güncelleniyor: {appointment_id}...")
 
 
-        old_appointment.status = AppointmentStatus.AVAILABLE
+        old_appointment.status = AppointmentStatus.CANCELLED
 
         try:
             new_appointment = self.create_appointment(

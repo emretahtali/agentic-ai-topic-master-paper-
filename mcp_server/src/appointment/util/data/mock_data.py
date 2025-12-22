@@ -32,18 +32,18 @@ MOCK_DATA = {
     "appointments": [
         Appointment(
             id="6500c262-8ecf-46a9-a1ec-f50eb7f4f9aa",
-            doctor_id="127",
+            doctor_id="201",
             patient_id="patient_1",
-            hospital_id="7",
+            hospital_id="2",
             start_time=str_to_dt("2025-08-14 08:50"),
             end_time=str_to_dt("2025-08-14 09:20"),
             status=AppointmentStatus.BOOKED
         ),
         Appointment(
             id="7cb80365-b031-4784-9c68-2fef90c5ccbf",
-            doctor_id="227",
+            doctor_id="101",
             patient_id="patient_1",
-            hospital_id="7",
+            hospital_id="2",
             start_time=str_to_dt("2025-08-19 09:00"),
             end_time=str_to_dt("2025-08-19 09:30"),
             status=AppointmentStatus.BOOKED
