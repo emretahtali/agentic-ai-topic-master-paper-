@@ -12,10 +12,10 @@ from benchmark.util import BenchmarkTemplate
 async def main():
     load_dotenv(find_dotenv())
 
-    PROVIDER = "google"
-    MODEL = "gemini-2.5-flash"
-    API_KEY = os.getenv("APPOINTMENT_LLM_API_KEY")
-    ENDPOINT = None
+    PROVIDER = os.getenv("BENCHMARK_LLM_PROVIDER").lower()
+    MODEL = os.getenv("BENCHMARK_LLM_MODEL")
+    API_KEY = os.getenv("BENCHMARK_LLM_API_KEY")
+    ENDPOINT = os.getenv("BENCHMARK_LLM_ENDPOINT")
 
     tester = BenchmarkTemplate(
         llm_type=PROVIDER,
