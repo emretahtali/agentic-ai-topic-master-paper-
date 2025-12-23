@@ -6,7 +6,7 @@ class DiagnosisTools(ToolBase):
     def __init__(self):
         pass
 
-    def get_user_health_record(self, patient_id: str = "123456789") -> dict:
+    def get_user_health_record(self, patient_id: str = "12345678901") -> dict:
         """
         Retrieves the comprehensive medical history and health profile of the patient.
 
