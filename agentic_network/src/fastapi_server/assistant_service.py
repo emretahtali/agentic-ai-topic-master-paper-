@@ -7,7 +7,7 @@ import uuid, asyncio
 
 from agentic_network.agent_graph import AgentGraph
 from agentic_network.core import AgentState
-from mcp_client.util import mcp_client
+from mcp_client import appointment_mcp
 
 
 class AssistantService:
@@ -39,7 +39,8 @@ class AssistantService:
         """Initialize backends and build the graph once per process."""
 
         print("[startup] Initializing MCP client…")
-        await mcp_client.initialize()
+        # appointment_mcp
+        await appointment_mcp.initialize()
 
         print("[startup] Building/compiling LangGraph…")
         checkpointer = self._make_checkpointer()
@@ -125,15 +126,17 @@ class AssistantService:
         print("\n---USER MESSAGE---")
         print(user_text)
 
-        # Pass only the new user message.
         result_state = await self.graph.ainvoke(
             agent_state,
             config=config,
         )
 
-        # Try to surface the final assistant text
-        agent_finish: AgentFinish = result_state.get("agent_outcome", {})
-        final_text = agent_finish.return_values.get("output", {})
+        messages = result_state.get("messages", [])
+        if messages:
+            final_text = messages[-1].content
+        else:
+            final_text = "Not give a response"
+
         resp = {"response": final_text}
 
         # Caching back
