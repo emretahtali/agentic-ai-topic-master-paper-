@@ -1,3 +1,1 @@
-from .topic_changed_condition import decide_topic_has_changed
-from .pre_topic_found_condition import decide_pre_topic_found
-from .new_topic_condition import decide_new_topic_found
+from .decide_topic_selected import is_topic_selected
