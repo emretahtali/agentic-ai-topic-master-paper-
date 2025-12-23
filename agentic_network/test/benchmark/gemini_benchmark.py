@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from dotenv import load_dotenv, find_dotenv
 import os
 
@@ -7,7 +9,9 @@ from langchain.agents.structured_output import ProviderStrategy
 
 import llm.client_types
 from benchmark.core import ResultInfo
-from benchmark.data import intent_list
+from benchmark.dataset import intent_list, dataset
+
+from benchmark.dataset import read_dataset
 
 #intent_tuple = tuple(intent_list)
 #IntentLiteral = Literal[*intent_tuple]
@@ -20,23 +24,26 @@ model = llm.client_types.get_llm_gemini(llm_key= API_KEY, model_name= "gemini-2.
 agent = create_agent(
     model=model,
     response_format=ProviderStrategy(ResultInfo),
-    system_prompt=SystemMessage(content=f"""
-    ### ROLE
-    You are a highly accurate Intent Classification specialist. Your task is to analyze a conversation and identify the specific intent of the LAST user message.
+    system_prompt=SystemMessage(content=f"""\
+### ROLE
+You are a highly accurate Intent Classification specialist. Your task is to analyze a conversation and identify the specific intent of the LAST user message.
 
-    ### CONTEXT
-    You will be provided with a conversation history. Use this history to resolve ambiguities. For example, if the user says "Yes, book it," look at the previous AI messages to understand WHAT is being booked (a bus ticket, a movie, etc.).
+### CONTEXT & TOPIC TRACKING
+- **Conversation Thread:** You will receive a list of messages. The dialogue represents a continuous task (e.g., booking a ticket, finding a house).
+- **Core Task:** Many user messages are short follow-ups (e.g., "Yes", "8 PM", "Near the park"). These messages INHERIT their intent from the ongoing topic established earlier in the chat.
+- **Ambiguity Resolution:** If the last message is vague, you MUST look at the preceding messages to identify what service or object is being discussed.
 
-    ### GUIDELINES
-    1. **Focus:** Categorize ONLY the last message from the user.
-    2. **Contextual Awareness:** If the last message is a follow-up (e.g., "8 PM", "In London", "Yes"), use the preceding dialogue to determine the correct intent from the list.
-    3. **Intent List:** You must choose exactly one intent from this list:
-    {intent_list}
+### GUIDELINES
+1. **Focus:** Categorize ONLY the last message from the user.
+2. **Contextual Awareness:** If the last message is a follow-up (e.g., "8 PM", "In London", "Yes"), use the preceding dialogue to determine the correct intent from the list.
+3. **Intent List:** You must choose exactly one intent from this list:
+    
+{intent_list}
 
-    ### OUTPUT FORMAT
-    Return ONLY a valid JSON object. Do not include any explanations or markdown formatting outside the JSON.
-    Schema: {{ "extracted_intent": "<chosen_intent>" }}
-    """
+### OUTPUT FORMAT
+Return ONLY a valid JSON object. Do not include any explanations or markdown formatting outside the JSON.
+Schema: {{ "extracted_intent": "<chosen_intent>" }}\
+"""
 ))
 
 
@@ -51,6 +58,10 @@ def parse_intent(resp) -> str:
 def evaluate_intent_accuracy(agent, dataset):
     correct = 0
     total = 0
+
+    GREEN = "\033[92m"
+    RED   = "\033[91m"
+    RESET = "\033[0m"
 
     for dialog in dataset:
         print(f"\n--- Dialogue ID: {dialog['dialogue_id']} ---")
@@ -69,106 +80,54 @@ def evaluate_intent_accuracy(agent, dataset):
                     "messages": chat_history + [current_message]
                 })
 
-                pred_intent = parse_intent(result)
+                pred_intent = parse_intent(result).strip()
+                gt_intent   = ground_truth.strip()
 
-                if pred_intent.strip().lower() == ground_truth.strip().lower():
+                is_correct = pred_intent.lower() == gt_intent.lower()
+                if is_correct:
                     correct += 1
 
+                # Anlık accuracy
+                accuracy_now = correct / total if total else 0
+
+                # Renk seçimi
+                color = GREEN if is_correct else RED
+
+                # Yazdır
                 print(f"User: {user_text}")
-                print(f"Pred: {pred_intent} | True: {ground_truth}")
+                print(f"{color}Pred: {pred_intent} | True: {gt_intent}{RESET}")
+                print(f"[{total} messages] Current Accuracy: {accuracy_now:.4f}\n")
 
             chat_history.append(current_message)
 
-    accuracy = correct / total if total else 0
-    return {"total": total, "correct": correct, "accuracy": accuracy}
+    final_accuracy = correct / total if total else 0
+    return {"total": total, "correct": correct, "accuracy": final_accuracy}
+
 
 def test_intent_pipeline():
     # mock dataset
-    dataset = [
-        {
-            "dialogue_id": "1",
-            "messages": [
-                {"role": "user", "message": "I want to book a movie ticket for tonight.", "intent": "BuyMovieTickets"},
-                {"role": "ai", "message": "Sure, which movie would you like to see?"},
-                {"role": "user", "message": "The new Batman movie at around 8 PM please.", "intent": "BuyMovieTickets"}
-            ]
-        },
-        {
-            "dialogue_id": "3",
-            "messages": [
-                {"role": "user", "message": "Are there any buses to Istanbul this afternoon?", "intent": "FindBus"},
-                {"role": "ai", "message": "There are buses at 2 PM and 5 PM. Should I book one?"},
-                {"role": "user", "message": "Yes, buy a ticket for the 5 PM one.", "intent": "BuyBusTicket"}
-            ]
-        },
-        {
-            "dialogue_id": "4",
-            "messages": [
-                {"role": "user", "message": "Set an alarm for me.", "intent": "AddAlarm"},
-                {"role": "ai", "message": "Of course, for what time?"},
-                {"role": "user", "message": "7 AM sharp.", "intent": "AddAlarm"},
-                {"role": "ai", "message": "Done. Anything else?"},
-                {"role": "user", "message": "What other alarms do I have?", "intent": "GetAlarms"}
-            ]
-        },
-        {
-            "dialogue_id": "5",
-            "messages": [
-                {"role": "user", "message": "I'm looking for a nice Italian restaurant nearby.",
-                 "intent": "FindRestaurants"},
-                {"role": "ai", "message": "I found 'Bella Ciao' and 'Roma Kitchen'. Do you want to book a table?"},
-                {"role": "user", "message": "Make a reservation at Bella Ciao for two.", "intent": "BookAppointment"}
-            ]
-        },
-        {
-            "dialogue_id": "6",
-            "messages": [
-                {"role": "user", "message": "I want to go to a concert this weekend.", "intent": "FindEvents"},
-                {"role": "ai", "message": "There is a Rock Festival and a Jazz Night. Interested?"},
-                {"role": "user", "message": "Get me two tickets for the Jazz Night.", "intent": "BuyEventTickets"}
-            ]
-        },
-        {
-            "dialogue_id": "7",
-            "messages": [
-                {"role": "user", "message": "Show me houses for rent in Kadıköy.", "intent": "FindHomeByArea"},
-                {"role": "ai", "message": "I listed 5 houses. Do you want to see the cheapest one?"},
-                {"role": "user", "message": "Actually, show me the ones with a balcony.", "intent": "FindHomeByArea"}
-            ]
-        },
-        {
-            "dialogue_id": "8",
-            "messages": [
-                {"role": "user", "message": "I need a ride to the airport.", "intent": "GetRide"},
-                {"role": "ai", "message": "I can call a taxi. Do you want a standard or a VIP car?"},
-                {"role": "user", "message": "Standard is fine, thanks.", "intent": "GetRide"}
-            ]
-        },
-        {
-            "dialogue_id": "9",
-            "messages": [
-                {"role": "user", "message": "Are there any trains to London tomorrow morning?", "intent": "FindTrains"},
-                {"role": "ai", "message": "Yes, the first one is at 6:30 AM."},
-                {"role": "user", "message": "What about the afternoon?", "intent": "FindTrains"}
-            ]
-        },
-        {
-            "dialogue_id": "10",
-            "messages": [
-                {"role": "user", "message": "I want to see some tourist attractions in Rome.",
-                 "intent": "FindAttractions"},
-                {"role": "ai", "message": "The Colosseum and Trevi Fountain are popular. Need more?"},
-                {"role": "user", "message": "Are there any museums near the Colosseum?", "intent": "FindAttractions"}
-            ]
-        }
-    ]
+
 
     results = evaluate_intent_accuracy(agent, dataset)
 
-    print("--- Test Results ---")
-    print("Total user messages:", results["total"])
-    print("Correct predictions:", results["correct"])
-    print("Accuracy:", results["accuracy"])
+    model_name = "gemini-2.5-flash"
+    safe_model_name = model_name.replace(":", "_").replace("/", "_")
+
+    out_dir = "io/output_files"
+    os.makedirs(out_dir, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_file = f"{safe_model_name}_results_{timestamp}.txt"
+    path = os.path.join(out_dir, out_file)
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("--- Intent Pipeline Test Results ---\n")
+        f.write(f"Model: {model_name}\n")
+        f.write(f"Total user messages: {results['total']}\n")
+        f.write(f"Correct predictions: {results['correct']}\n")
+        f.write(f"Accuracy: {results['accuracy']:.4f}\n")
+
+    print(f"Results saved to: {path}")
 
 test_intent_pipeline()
 

@@ -1,1 +1,0 @@
-from .intent_label import read_labels_from_file
