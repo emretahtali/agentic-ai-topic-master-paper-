@@ -82,9 +82,9 @@ def extract_intents_from_dataset(data):
     # Sort alphabetically
     sorted_intents = sorted(list(unique_intents))
 
-    """print("\n--- Extracted Intents ---")
-    for label in sorted_intents:
-        print(label)"""
+    # print("\n--- Extracted Intents ---")
+    # for label in sorted_intents:
+    #     print(label)
 
     return sorted_intents
 
