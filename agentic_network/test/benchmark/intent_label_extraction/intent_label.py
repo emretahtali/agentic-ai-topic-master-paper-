@@ -52,24 +52,54 @@ def read_labels_from_file(input_path):
 
 
 if __name__ == "__main__":
+    # Define directories
+    INPUT_DIR = '../io/input_files'
+    OUTPUT_DIR = '../io/output_files'
+
+    # Ensure output directory exists
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    # Map input schema filenames to desired output text filenames
     files_map = {'train_schema.json': 'train_intents.txt', 'test_schema.json': 'test_intents.txt'}
 
-    for json_file, txt_file in files_map.items():
-        logger.info(f"Processing {json_file}...")
+    generated_files = []
 
-        intents = extract_unique_intents([json_file])
+    for json_filename, txt_filename in files_map.items():
+        # Construct full paths
+        input_path = os.path.join(INPUT_DIR, json_filename)
+        output_path = os.path.join(OUTPUT_DIR, txt_filename)
+
+        logger.info(f"Processing {input_path}...")
+
+        # Extract
+        intents = extract_unique_intents([input_path])
 
         if intents:
-            save_labels_to_file(intents, txt_file)
+            # Save
+            save_labels_to_file(intents, output_path)
+            generated_files.append(output_path)
 
-            loaded_intents = read_labels_from_file(txt_file)
+            # Verify
+            loaded_intents = read_labels_from_file(output_path)
 
             if len(intents) == len(loaded_intents):
-                logger.info(f"Save operation successful for {txt_file}.")
+                logger.info(f"Save operation successful for {txt_filename}.")
             else:
-                logger.error(f"Save operation failed for {txt_file}: Count mismatch.")
+                logger.error(f"Save operation failed for {txt_filename}: Count mismatch.")
         else:
-            logger.warning(f"No intents extracted from {json_file}.")
+            logger.warning(f"No intents extracted from {json_filename}.")
 
-    all_intents = set(read_labels_from_file('train_intents.txt') + read_labels_from_file('test_intents.txt'))
-    print(len(all_intents))
+    # Final Aggregation Check
+    # Reading back the files we just created in the output directory
+    train_intents_path = os.path.join(OUTPUT_DIR, 'train_intents.txt')
+    test_intents_path = os.path.join(OUTPUT_DIR, 'test_intents.txt')
+
+    all_intents = set()
+
+    if os.path.exists(train_intents_path):
+        all_intents.update(read_labels_from_file(train_intents_path))
+
+    if os.path.exists(test_intents_path):
+        all_intents.update(read_labels_from_file(test_intents_path))
+
+    logger.info(f"Total unique intents across all files: {len(all_intents)}")
