@@ -3,16 +3,16 @@ import asyncio
 
 from agentic_network.agents.diagnosis.system_prompt import system_msg
 from agentic_network.core import AgentState
-from agentic_network.agents.agent import Agent
-from llm import diagnosis_llm
+from agentic_network.utils import BaseAgent
+from llm import get_llm, LLMModel
 from mcp_client import diagnosis_mcp
 
 
-class DiagnosisAgent(Agent):
+class DiagnosisAgent(BaseAgent):
 
     def __init__(self):
         self.tools = diagnosis_mcp.get_tools()
-        self.model = diagnosis_llm.bind_tools(self.tools)
+        self.model = get_llm(LLMModel.DIAGNOSIS).bind_tools(self.tools)
 
     async def _get_node(self, state: AgentState) -> dict:
 
@@ -23,6 +23,7 @@ class DiagnosisAgent(Agent):
 
         # return back the appointment data to llm
         return {"messages": [response], "active_agent": "diagnosis_agent"}
+
 
 
 async def test():

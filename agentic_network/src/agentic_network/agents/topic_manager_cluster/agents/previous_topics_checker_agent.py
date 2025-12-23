@@ -1,5 +1,3 @@
-from typing import Literal
-
 from langchain.agents import create_agent
 from langchain.agents.structured_output import ProviderStrategy
 from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
@@ -10,11 +8,9 @@ from agentic_network.agents.topic_manager_cluster.core import TopicManagerState
 from agentic_network.agents.topic_manager_cluster.utils.topic_manager_util import (
     format_dialog_with_topics,
     strip_quotes,
-    find_topic_index,
     resurface_topic,
 )
 from agentic_network.utils import BaseAgent
-from agentic_network.core import AgentState
 from llm import get_llm
 from llm.llm_client import LLMModel
 
@@ -30,7 +26,7 @@ class PreTopicsCheckerAgent(BaseAgent):
         uuid: str
 
     def __init__(self):
-        self.llm = get_llm(LLMModel.GEMINI)
+        self.llm = get_llm(LLMModel.TOPIC_MASTER)
         self._initialize_model()
 
     # ---- Internal Methods --------------------------------------------------------
@@ -84,7 +80,7 @@ class PreTopicsCheckerAgent(BaseAgent):
         return update_state
 
     @staticmethod
-    def _get_system_prompt(self, dialog: str, message: str) -> str:
+    def _get_system_prompt(dialog: str, message: str) -> str:
         return f"""You are part of an AI assistant designed to help users with medical conditions get diagnosed and get hospital appointments. Your task here is **topic attribution**: decide which existing topic in the full dialog the latest user input belongs to, or declare that it should start a new topic.
 
     TASK

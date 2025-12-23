@@ -2,10 +2,9 @@ from typing import Optional, Literal, Iterable
 from uuid import uuid4
 
 from agentic_network.agents import AgentData
-from agentic_network.agents.topic_manager_cluster.agents.topic_change_checker_agent import ResponseModel
 from agentic_network.agents.topic_manager_cluster.core.topic_manager_state import TopicState
 from agentic_network.core import AgentState
-from agentic_network.agents.topic_manager_cluster.core import TopicManagerState, TopicManagerRoutes
+from agentic_network.agents.topic_manager_cluster.core import TopicManagerState
 from langchain_core.messages import (
     AnyMessage,
     HumanMessage,
@@ -224,8 +223,8 @@ def format_dialog(messages: Iterable[AnyMessage]) -> str:
     return "\n".join(f"{_role_of(m)}: {_content_str(m)}" for m in messages)
 
 
-def redirect_to_appointment_agent(agent_state: AgentState):
-    get_current_topic(agent_state)["agent"] = GraphRoutes.APPOINTMENT_AGENT
+# def redirect_to_appointment_agent(agent_state: AgentState):
+#     get_current_topic(agent_state)["agent"] = GraphRoutes.APPOINTMENT_AGENT
 
 # tests:
 # messages = [add_topic_id_to_message(HumanMessage("hello!"), "12341235245"), HumanMessage("lets go!")]

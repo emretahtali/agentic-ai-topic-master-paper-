@@ -18,7 +18,7 @@ class NewTopicAgent(BaseAgent):
         agent: AgentData.agent_literals
 
     def __init__(self):
-        self.llm = get_llm(LLMModel.GEMINI)
+        self.llm = get_llm(LLMModel.TOPIC_MASTER)
         self._initialize_model()
 
     # ---- Internal Methods --------------------------------------------------------
@@ -60,7 +60,7 @@ class NewTopicAgent(BaseAgent):
         }
 
     @staticmethod
-    def _get_system_prompt(self, message: str) -> str:
+    def _get_system_prompt(message: str) -> str:
         return f"""You are part of a medical assistant. Your sole task is **agent routing for a new topic**: based ONLY on the latest user message, choose which specialized agent should handle it.
 
     AGENTS & THEIR SCOPES

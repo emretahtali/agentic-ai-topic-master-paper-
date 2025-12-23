@@ -3,16 +3,16 @@ import asyncio
 
 from agentic_network.agents.appointment.system_prompt import system_msg
 from agentic_network.core import AgentState
-from agentic_network.agents.agent import Agent
-from llm import appointment_llm
+from agentic_network.utils import BaseAgent
+from llm import LLMModel, get_llm
 from mcp_client import appointment_mcp
 
 
-class AppointmentAgent(Agent):
+class AppointmentAgent(BaseAgent):
     def __init__(self):
         self.tools = appointment_mcp.get_tools()
         self.tool_map = {tool.name: tool for tool in self.tools}
-        self.model = appointment_llm.bind_tools(self.tools)
+        self.model = get_llm(LLMModel.APPOINTMENT).bind_tools(self.tools)
 
     async def _get_node(self, state: AgentState) -> dict:
         messages = state["messages"]

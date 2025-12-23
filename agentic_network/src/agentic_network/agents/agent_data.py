@@ -7,7 +7,7 @@ class AgentData:
     class Agents:
         diagnosis_agent = "DIAGNOSIS_AGENT"
 
-    agent_literals = Literal["DIAGNOSIS_AGENT"]
     agent_mapping = {
         Agents.diagnosis_agent: DiagnosisAgent,
     }
+    agent_literals = Literal[agent_mapping]

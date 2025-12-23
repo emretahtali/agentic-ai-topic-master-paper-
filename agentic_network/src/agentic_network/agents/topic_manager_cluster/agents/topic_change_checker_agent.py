@@ -12,17 +12,20 @@ from agentic_network.agents.topic_manager_cluster.utils.topic_manager_util impor
     get_current_topic,
     format_dialog,
 )
-from agentic_network.utils import BaseAgent
+from agentic_network.utils import BaseAgent, get_class_variable_fields
 from llm.llm_client import get_llm, LLMModel
-
 
 class ResponseModel:
     class Choices:
         same_topic = "SAME_TOPIC"
         different_topic = "DIFFERENT_TOPIC"
 
-    response_literals = Literal["SAME_TOPIC", "DIFFERENT_TOPIC"]
-    response_strings = [Choices.same_topic, Choices.different_topic]
+    response_strings = list(map(Choices.__dict__.get, get_class_variable_fields(Choices)))
+    response_literals = Literal[*response_strings]
+
+print(ResponseModel.response_strings)
+print(ResponseModel.response_literals)
+print(type(ResponseModel.response_literals))
 
 class TopicChangeCheckerAgent(BaseAgent):
     agent: Runnable
@@ -31,7 +34,7 @@ class TopicChangeCheckerAgent(BaseAgent):
         final_answer: ResponseModel.response_literals
 
     def __init__(self):
-        self.llm = get_llm(LLMModel.GEMINI)
+        self.llm = get_llm(LLMModel.TOPIC_MASTER)
         self._initialize_model()
 
     # ---- Internal Methods --------------------------------------------------------d
@@ -79,7 +82,7 @@ class TopicChangeCheckerAgent(BaseAgent):
         }
 
     @staticmethod
-    def _get_system_prompt(self, cur_topic_messages: str, current_message: str) -> str:
+    def _get_system_prompt(cur_topic_messages: str, current_message: str) -> str:
         return f"""You are part of an AI assistant designed to help users with medical conditions get diagnosed and get hospital appointments. Your primary goal is to provide helpful, precise, and clear responses.
 
     TASK

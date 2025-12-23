@@ -1,10 +1,19 @@
+import os
+
+from dotenv import load_dotenv, find_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 
 
-def get_llm_openai(llm_endpoint, llm_key, model_name="default") -> ChatOpenAI:
+def get_llm_openai() -> ChatOpenAI:
+    load_dotenv(find_dotenv())
+
+    llm_endpoint = os.getenv("OPENAI_API_ENDPOINT").strip()
+    llm_key = os.getenv("OPENAI_API_KEY").strip()
+    llm_model_name = os.getenv("OPENAI_API_MODEL").strip()
+
     return ChatOpenAI(
-        model=model_name,
+        model=llm_model_name,
         base_url=llm_endpoint,
         api_key=llm_key,
-        # default_headers={"Content-Type": "application/json", "X-Custom": "value"}
     )
