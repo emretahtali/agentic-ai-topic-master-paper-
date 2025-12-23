@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional, Literal, List, Dict, Any
 
 from langchain.agents import create_agent
-from langchain.agents.structured_output import ProviderStrategy
+from langchain.agents.structured_output import ProviderStrategy, ToolStrategy
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -21,7 +21,8 @@ class BenchmarkTemplate:
             system_prompt: Any,
             result_schema: Any,
             endpoint: Optional[str] = None,
-            concurrency: int = 5
+            concurrency: int = 5,
+            strategy_type: Literal["tool", "provider"] = "provider",
     ):
         self.llm_type = llm_type
         self.model_name = model_name
@@ -31,10 +32,17 @@ class BenchmarkTemplate:
         self.endpoint = endpoint
         self.concurrency = concurrency
 
+        if strategy_type == "tool":
+            self.strategy = ToolStrategy(self.result_schema)
+        elif strategy_type == "provider":
+            self.strategy = ProviderStrategy(self.result_schema)
+
+
+
         self.model = self._setup_llm()
         self.agent = create_agent(
             model=self.model,
-            response_format=ProviderStrategy(self.result_schema),
+            response_format=self.strategy,
             system_prompt=self.system_prompt
         )
 

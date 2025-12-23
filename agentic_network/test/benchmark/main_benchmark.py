@@ -16,6 +16,7 @@ async def main():
     MODEL = os.getenv("BENCHMARK_LLM_MODEL")
     API_KEY = os.getenv("BENCHMARK_LLM_API_KEY")
     ENDPOINT = os.getenv("BENCHMARK_LLM_ENDPOINT")
+    STRATEGY = os.getenv("BENCHMARK_LLM_STRATEGY").lower()
 
     tester = BenchmarkTemplate(
         llm_type=PROVIDER,
@@ -24,7 +25,8 @@ async def main():
         system_prompt=system_prompt,
         result_schema=ResultInfo,
         endpoint=ENDPOINT,
-        concurrency=5
+        concurrency=5,
+        strategy_type=STRATEGY
     )
 
     await tester.run(dataset)
