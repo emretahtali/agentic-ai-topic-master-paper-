@@ -11,6 +11,7 @@ from mcp_client import appointment_mcp
 class AppointmentAgent(Agent):
     def __init__(self):
         self.tools = appointment_mcp.get_tools()
+        self.tool_map = {tool.name: tool for tool in self.tools}
         self.model = appointment_llm.bind_tools(self.tools)
 
     async def _get_node(self, state: AgentState) -> dict:
@@ -18,7 +19,7 @@ class AppointmentAgent(Agent):
 
         # call model
         response = self.model.invoke([system_msg] + messages)
-        
+
         # return back the appointment data to llm
         return {
             "messages": [response],
@@ -26,11 +27,9 @@ class AppointmentAgent(Agent):
         }
 
 
-
 async def test():
-
     from loguru import logger
-    from langchain_core.messages import HumanMessage
+    from langchain_core.messages import HumanMessage, ToolMessage
 
     try:
         logger.info(f"Initializing MCP Client for {appointment_mcp.label}...")
@@ -39,15 +38,12 @@ async def test():
         logger.info("Instantiating AppointmentAgent...")
         agent = AppointmentAgent()
 
-        # Initialize the state
         state: AgentState = {"messages": [], "intermediate_steps": [], "agent_outcome": None}
 
         logger.success("Agent ready! Type 'exit' or 'quit' to stop.")
         print("-" * 50)
 
-        # Start the Loop
         while True:
-            # Get user input from console
             user_input = input("\n👤 User: ")
 
             if user_input.lower() in ["exit", "quit"]:
@@ -56,29 +52,50 @@ async def test():
             if not user_input.strip():
                 continue
 
-            # Update state with the new human message
             state["messages"].append(HumanMessage(content=user_input))
 
-            # Process with Agent
-            result = await agent._get_node(state)
+            # --- AGENT LOOP ---
+            while True:
+                result = await agent._get_node(state)
+                ai_msg = result["messages"][0]
+                state["messages"].append(ai_msg)
 
-            # Extract the AI's response
-            ai_msg = result["messages"][0]
+                if ai_msg.tool_calls:
+                    for tool_call in ai_msg.tool_calls:
+                        tool_name = tool_call["name"]
+                        tool_args = tool_call["args"]
+                        tool_id = tool_call["id"]
 
-            # Update local state with AI's message to maintain history
-            state["messages"].append(ai_msg)
+                        logger.warning(f"🛠️  TOOL CALL: {tool_name} -> {tool_args}")
 
-            # Handle Output
-            if ai_msg.tool_calls:
-                for tool_call in ai_msg.tool_calls:
-                    logger.warning(f"🛠️  TOOL CALL: {tool_call['name']} -> {tool_call['args']}")
+                        selected_tool = agent.tool_map.get(tool_name)
+                        tool_output = "Error: Tool not found"
 
-                # If tool calls exist, AI usually won't have text content
-                if not ai_msg.content:
-                    print(f"🤖 AI: [Requesting tool: {ai_msg.tool_calls[0]['name']}]")
+                        if selected_tool:
+                            try:
+                                tool_output = await selected_tool.ainvoke(tool_args)
 
-            if ai_msg.content:
-                print(f"🤖 AI: {ai_msg.content}")
+                                logger.info(f"   ✅ RESULT: {str(tool_output)[:100]}...")
+                            except Exception as e:
+                                tool_output = f"Tool Execution Error: {str(e)}"
+                                logger.error(f"   ❌ ERROR: {tool_output}")
+                        else:
+                            logger.error(f"   ❌ ERROR: Tool '{tool_name}' not found.")
+
+                        content_str = str(tool_output)
+
+                        tool_msg = ToolMessage(
+                            content=content_str,
+                            tool_call_id=tool_id,
+                            name=tool_name
+                        )
+                        state["messages"].append(tool_msg)
+
+                    continue
+
+                else:
+                    print(f"🤖 AI: {ai_msg.content}")
+                    break
 
     except KeyboardInterrupt:
         logger.info("\nLoop interrupted by user.")
