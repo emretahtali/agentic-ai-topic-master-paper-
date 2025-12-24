@@ -1,5 +1,6 @@
 package com.ellitoken.myapplication.data.remote
 
+import com.ellitoken.myapplication.data.remote.repository.UserManager
 import com.ellitoken.myapplication.utils.NetworkError
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -77,11 +78,15 @@ class ApiClient(
         authType: AuthType,
         requestType: RequestType = RequestType.POST,
         body: Any? = null,
-        serializer: (String) -> T,
+        serializer: (String) -> T?,
         isRetry: Boolean = false
     ): Flow<Result<T, NetworkError>> = flow {
         try {
-            val response = httpClient.request("/api/$endpoint") {
+            val path = if (endpoint.startsWith("/")) endpoint else "/$endpoint"
+
+            android.util.Log.d("API_DEBUG", "İstek atılıyor: $path")
+
+            val response = httpClient.request(path) {
                 method = when (requestType) {
                     RequestType.GET -> HttpMethod.Get
                     RequestType.POST -> HttpMethod.Post
@@ -109,10 +114,14 @@ class ApiClient(
                 if (body != null) {
                     contentType(ContentType.Application.Json)
                     setBody(body)
+                    android.util.Log.d("API_DEBUG", "Gönderilen Body: $body")
                 }
             }
 
+            android.util.Log.d("API_DEBUG", "Sunucu Cevabı: ${response.status}")
+
             if (response.status == HttpStatusCode.Unauthorized) {
+                android.util.Log.e("API_DEBUG", "HATA: 401 Unauthorized")
                 if (authType == AuthType.ACCESS && !isRetry) {
                     val refreshResult = refreshAccessToken()
                     if (refreshResult is Result.Success) {
@@ -125,29 +134,57 @@ class ApiClient(
                 return@flow
             }
 
+            // LOG 4: Eğer sunucu 200 OK dışı bir şey döndüyse içeriğini okuyalım
+            if (!response.status.isSuccess()) {
+                val errorBody = response.bodyAsText()
+                android.util.Log.e("API_DEBUG", "Sunucu Hata Döndü! Kod: ${response.status} - İçerik: $errorBody")
+                emit(Result.Error(NetworkError("Sunucu Hatası: ${response.status}")))
+                return@flow
+            }
+
             val channel: ByteReadChannel = response.bodyAsChannel()
 
             while (!channel.isClosedForRead) {
                 val line = channel.readUTF8Line(limit = 10000)
-                if (!line.isNullOrBlank()) {
+
+                if (line == null) {
+                    android.util.Log.d("API_DEBUG", "Stream bitti (EOF).")
+                    break
+                }
+
+                if (line.isNotBlank()) {
                     try {
-                        val dataLine = line.substringAfter("data:", "").trim()
-                        if (dataLine.isNotEmpty()) {
+                        android.util.Log.d("API_DEBUG", "Stream Satırı: $line")
+
+                        val trimmedLine = line.trim()
+                        val dataLine = if (trimmedLine.startsWith("data:")) {
+                            trimmedLine.removePrefix("data:").trim()
+                        } else {
+                            trimmedLine
+                        }
+
+                        if (dataLine.isNotEmpty() && dataLine != "[DONE]") {
                             val data = serializer(dataLine)
-                            emit(Result.Success(data))
+                            if (data != null) {
+                                emit(Result.Success(data))
+                            }
                         }
                     } catch (e: Exception) {
-                        emit(Result.Error(NetworkError("Parse hatası")))
+                        android.util.Log.e("API_DEBUG", "Serializer Hatası: ${e.message} - Satır: $line")
+                        emit(Result.Error(NetworkError("Parse hatası: ${e.localizedMessage}")))
                     }
                 }
             }
 
         } catch (e: UnresolvedAddressException) {
+            android.util.Log.e("API_DEBUG", "İnternet Yok: ${e.message}")
             emit(Result.Error(NetworkError("İnternet bağlantısı yok.")))
         } catch (e: SerializationException) {
+            android.util.Log.e("API_DEBUG", "Serialization Hatası: ${e.message}")
             emit(Result.Error(NetworkError("Veri formatı hatalı.")))
         } catch (e: Exception) {
-            emit(Result.Error(NetworkError(e.localizedMessage ?: "Bilinmeyen hata")))
+            android.util.Log.e("API_DEBUG", "GENEL ÇÖKME: ${e.localizedMessage}", e)
+            emit(Result.Error(NetworkError("Hata: ${e.localizedMessage}")))
         }
     }
 
@@ -196,7 +233,7 @@ class ApiClient(
 
             try {
                 isRefreshingToken = true
-                
+
                 val response = makeRequest(
                     RequestType.POST,
                     AuthType.REFRESH,
@@ -209,7 +246,7 @@ class ApiClient(
                 if (response.status.value in 200..299) {
                     val bodyText = response.bodyAsText()
                     val authResponse = json.decodeFromString<AuthResponseDto>(bodyText)
-                    
+
                     if (authResponse.accessToken != null && authResponse.refreshToken != null) {
                         userManager.saveAccessToken(authResponse.accessToken)
                         userManager.saveRefreshToken(authResponse.refreshToken)
@@ -223,16 +260,6 @@ class ApiClient(
             }
         }
     }
-}
-
-
-interface UserManager {
-    fun getAccessToken(): String?
-    fun getRefreshToken(): String?
-    fun saveAccessToken(token: String)
-    fun saveRefreshToken(token: String)
-    fun clearAccessToken()
-    fun clearRefreshToken()
 }
 
 enum class RequestType { GET, POST, PUT, DELETE, PATCH }

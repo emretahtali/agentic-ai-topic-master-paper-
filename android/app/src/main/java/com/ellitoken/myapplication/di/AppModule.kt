@@ -10,15 +10,17 @@ import com.ellitoken.myapplication.presentation.screens.calendar.viewmodel.Calen
 import com.ellitoken.myapplication.presentation.screens.chatsupport.viewmodel.ChatSupportScreenViewModel
 import com.ellitoken.myapplication.presentation.screens.home.viewmodel.HomeScreenViewModel
 import com.ellitoken.myapplication.presentation.screens.profile.viewmodel.ProfileScreenViewModel
-import com.ellitoken.myapplication.repository.UserRepository
+import com.ellitoken.myapplication.data.remote.repository.UserManager
+import com.ellitoken.myapplication.data.remote.repository.UserRepository
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val appModule = module {
     single { provideHttpClient() }
+    single { UserRepository(androidContext()) } bind UserManager::class
     single { ChatSupportRepository() }
-    single { UserRepository() }
     single { VoiceApiService(androidContext()) }
     factory { VoiceRecorder(androidContext()) }
     single { HomeScreenViewModel(get(), get() , get()) }

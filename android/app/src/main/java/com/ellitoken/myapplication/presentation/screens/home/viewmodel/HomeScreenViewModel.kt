@@ -10,7 +10,7 @@ import com.ellitoken.myapplication.presentation.screens.home.uistate.*
 import com.ellitoken.myapplication.data.domain.VoiceRecorder
 import com.ellitoken.myapplication.data.remote.api.VoiceApiService
 import com.ellitoken.myapplication.data.remote.model.User
-import com.ellitoken.myapplication.repository.UserRepository
+import com.ellitoken.myapplication.data.remote.repository.UserRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

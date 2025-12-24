@@ -31,55 +31,66 @@ class ChatSupportScreenViewModel(
         if (prompt.isBlank()) return
 
         viewModelScope.launch {
-            val messages = _uiState.value.messages.toMutableList()
+            _uiState.update { currentState ->
+                val messages = currentState.messages.toMutableList()
+                val userMessage = AiMessage(
+                    id = UUID.randomUUID().toString(),
+                    createdAt = Clock.System.now(),
+                    message = prompt,
+                    fromAi = false
+                )
+                messages.add(0, userMessage)
 
-            val userMessage = AiMessage(
-                id = UUID.randomUUID().toString(),
-                createdAt = Clock.System.now(),
-                message = prompt,
-                fromAi = false
-            )
-
-            messages.add(0, userMessage)
-
-            _uiState.update {
-                it.copy(messages = messages, textFieldValue = TextFieldValue(), isLoading = true)
+                currentState.copy(
+                    messages = messages,
+                    textFieldValue = TextFieldValue(),
+                    isLoading = true
+                )
             }
+
+            var currentAiMessageId: String? = null
 
             aiChatRepository.streamAiMessage(prompt).collect { result ->
 
                 result.onSuccess { receivedAiMessage ->
+                    android.util.Log.d("VIEWMODEL_DEBUG", "Veri Geldi: ${receivedAiMessage.message}")
 
                     _uiState.update { currentState ->
                         val updatedMessages = currentState.messages.toMutableList()
 
-                        val index = updatedMessages.indexOfFirst { it.id == receivedAiMessage.id }
+                        val index = if (currentAiMessageId != null) {
+                            updatedMessages.indexOfFirst { it.id == currentAiMessageId }
+                        } else {
+                            -1
+                        }
 
                         if (index != -1) {
-                            val existingAiMessage = updatedMessages[index]
-                            updatedMessages[index] = existingAiMessage.copy(
-                                message = existingAiMessage.message + receivedAiMessage.message
+                            val existingMessage = updatedMessages[index]
+                            updatedMessages[index] = existingMessage.copy(
+
+                                message = existingMessage.message + receivedAiMessage.message
                             )
                         } else {
+                            currentAiMessageId = receivedAiMessage.id
                             updatedMessages.add(0, receivedAiMessage)
                         }
 
-                        currentState.copy(messages = updatedMessages, isLoading = false)
+                            currentState.copy(messages = updatedMessages, isLoading = false)
                     }
 
                 }.onError { networkError ->
+                    android.util.Log.e("VIEWMODEL_DEBUG", "Hata: ${networkError.message}")
 
                     val errorMessage = AiMessage(
                         id = UUID.randomUUID().toString(),
                         createdAt = Clock.System.now(),
-                        message = "Hata: ${networkError.message}",
+                        message = "⚠️ Hata: ${networkError.message}",
                         fromAi = true
                     )
 
                     _uiState.update { currentState ->
                         val updatedMessages = currentState.messages.toMutableList()
                         updatedMessages.add(0, errorMessage)
-
                         currentState.copy(messages = updatedMessages, isLoading = false)
                     }
                 }

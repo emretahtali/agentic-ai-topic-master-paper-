@@ -1,7 +1,17 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 android {
@@ -16,6 +26,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // local.properties dosyasından anahtarı okuyoruz
+        val apiKey = localProperties.getProperty("MY_API_KEY") ?: ""
+
+        // --- DEĞİŞİKLİK BURADA ---
+        // buildConfigField yerine resValue kullanıyoruz.
+        // Bu işlem, şifreyi otomatik olarak R.string.my_api_key içine gömer.
+        resValue("string", "my_api_key", apiKey)
     }
 
     buildTypes {
@@ -36,6 +54,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -104,22 +123,18 @@ dependencies {
     // JSON
     implementation(libs.org.json)
 
-    //
+    // DateTime
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
-    //lottie
+    // Lottie
     implementation("com.airbnb.android:lottie-compose:6.6.7")
 
-    // VAD (WebRTC/)
-    // implementation("com.github.gkonovalov.android-vad:webrtc:2.0.3")
-
-    // VAD (Silero/)
+    // VAD (Silero)
     implementation("com.github.gkonovalov.android-vad:silero:2.0.3")
-//
-//
-//    // Opus (pure Java)
+
+    // Opus
     implementation("io.github.jaredmdobson:concentus:1.0.2")
-//
-//    //couroutines
+
+    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 }

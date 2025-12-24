@@ -1,12 +1,19 @@
-package com.ellitoken.myapplication.repository
+package com.ellitoken.myapplication.data.remote.repository
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import com.ellitoken.myapplication.data.remote.model.User
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
-class UserRepository {
+
+class UserRepository(private val context: Context) : UserManager {
 
     private val _userState = MutableStateFlow<User?>(null)
     val userState: StateFlow<User?> = _userState.asStateFlow()
@@ -14,9 +21,24 @@ class UserRepository {
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+
+
+    init {
+        if (getAccessToken() == null) {
+            saveAccessToken("dev-key")
+            saveRefreshToken("dev-key")
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            loadUser()
+        }
+    }
+
     suspend fun loadUser() {
         _isLoading.value = true
-        kotlinx.coroutines.delay(500)
+        delay(500)
+
         val mockUser = User(
             id = "111111111",
             imageUrl = "https://randomuser.me/api/portraits/men/1.jpg",
@@ -89,4 +111,38 @@ class UserRepository {
         val updatedUser = currentUser.copy(imageUrl = uri?.toString().orEmpty())
         _userState.value = updatedUser
     }
+
+    override fun getAccessToken(): String? {
+        return prefs.getString("access_token", null)
+    }
+
+    override fun getRefreshToken(): String? {
+        return prefs.getString("refresh_token", null)
+    }
+
+    override fun saveAccessToken(token: String) {
+        prefs.edit().putString("access_token", token).apply()
+    }
+
+    override fun saveRefreshToken(token: String) {
+        prefs.edit().putString("refresh_token", token).apply()
+    }
+
+    override fun clearAccessToken() {
+        prefs.edit().remove("access_token").apply()
+    }
+
+    @SuppressLint("UseKtx")
+    override fun clearRefreshToken() {
+        prefs.edit().remove("refresh_token").apply()
+    }
+}
+
+interface UserManager {
+    fun getAccessToken(): String?
+    fun getRefreshToken(): String?
+    fun saveAccessToken(token: String)
+    fun saveRefreshToken(token: String)
+    fun clearAccessToken()
+    fun clearRefreshToken()
 }
