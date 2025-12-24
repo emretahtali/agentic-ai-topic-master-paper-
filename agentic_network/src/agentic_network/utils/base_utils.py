@@ -3,5 +3,5 @@ def get_class_variable_fields(cls):
      if not callable(val) and not name.startswith('__')]
 
 
-def get_class_variable_field_values(cls):
+def get_class_field_values(cls):
     return list(map(cls.__dict__.get, get_class_variable_fields(cls)))
