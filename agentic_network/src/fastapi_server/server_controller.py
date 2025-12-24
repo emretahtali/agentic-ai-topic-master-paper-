@@ -5,6 +5,8 @@ from mcp_client import appointment_mcp
 from .assistant_service import AssistantService
 from .invoke_body import InvokeBody
 from fastapi.encoders import jsonable_encoder
+import json
+from fastapi import HTTPException
 
 
 class APIServer:
@@ -65,7 +67,14 @@ class APIServer:
                 tool_args = {"patient_id": "12345678901"}
 
                 result = await selected_tool.ainvoke(tool_args)
-                return result
+
+                if isinstance(result, list) and result and isinstance(result[0], dict):
+                    text = result[0].get("text", "")
+
+                    obj = json.loads(text)
+                    return {"respond": json.dumps(obj["appointments"])}
+
+                return {"respond": result}
 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Tool execution error: get_patient_appointments: {e}")
