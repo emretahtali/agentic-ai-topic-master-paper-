@@ -34,7 +34,7 @@ class TopicManagerCluster(BaseAgent):
 
     # ---- Internal Methods --------------------------------------------------------
     def _get_node(self, agent_state: AgentState) -> dict:
-        topic_manager_state = agent_state.get("topic_manager_state")
+        topic_manager_state = agent_state.get("topic_master_state")
 
         # TODO: add this to agentstate
         # TopicManagerState(
@@ -44,11 +44,10 @@ class TopicManagerCluster(BaseAgent):
         #     disclosed_topics=[],
         #     topic_selected=False
 
-        topic_manager_state["current_message"]=agent_state.get("current_message"), # TODO fix
-        topic_manager_state["topic_selected"]=False
-
-        self.graph.invoke(state=topic_manager_state)
-        return {}
+        final_state = self.graph.invoke(topic_manager_state)
+        return {
+            "messages": final_state["current_message"],
+        }
 
     def _initialize_agents(self) -> None:
         """Instantiate concrete agent nodes.
@@ -86,6 +85,7 @@ class TopicManagerCluster(BaseAgent):
         graph_builder.add_edge(TopicManagerRoutes.START, TopicManagerRoutes.PRE_PROCESSING_AGENT)
         graph_builder.add_edge(TopicManagerRoutes.PRE_PROCESSING_AGENT, TopicManagerRoutes.TOPIC_CHANGE_CHECKER_AGENT)
         graph_builder.add_edge(TopicManagerRoutes.NEW_TOPIC_AGENT, TopicManagerRoutes.POST_PROCESSING_AGENT)
+        graph_builder.add_edge(TopicManagerRoutes.POST_PROCESSING_AGENT, TopicManagerRoutes.END)
 
         # ---------------------- Conditional Routing -----------------------------------
         graph_builder.add_conditional_edges(
@@ -93,7 +93,7 @@ class TopicManagerCluster(BaseAgent):
             is_topic_selected,
             path_map={
                 TopicManagerRoutes.NEXT: TopicManagerRoutes.PRE_TOPICS_AGENT,
-                TopicManagerRoutes.END: TopicManagerRoutes.END
+                TopicManagerRoutes.END: TopicManagerRoutes.POST_PROCESSING_AGENT
             },
         )
         graph_builder.add_conditional_edges(
@@ -101,7 +101,7 @@ class TopicManagerCluster(BaseAgent):
             is_topic_selected,
             path_map={
                 TopicManagerRoutes.NEXT: TopicManagerRoutes.NEW_TOPIC_AGENT,
-                TopicManagerRoutes.END: TopicManagerRoutes.END,
+                TopicManagerRoutes.END: TopicManagerRoutes.POST_PROCESSING_AGENT,
             },
         )
 

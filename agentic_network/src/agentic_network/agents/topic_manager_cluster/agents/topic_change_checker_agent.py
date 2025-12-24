@@ -12,7 +12,7 @@ from agentic_network.agents.topic_manager_cluster.utils.topic_manager_util impor
     get_current_topic,
     format_dialog,
 )
-from agentic_network.utils import BaseAgent, get_class_variable_fields
+from agentic_network.utils import BaseAgent, get_class_variable_field_values
 from llm.llm_client import get_llm, LLMModel
 
 class ResponseModel:
@@ -20,12 +20,8 @@ class ResponseModel:
         same_topic = "SAME_TOPIC"
         different_topic = "DIFFERENT_TOPIC"
 
-    response_strings = list(map(Choices.__dict__.get, get_class_variable_fields(Choices)))
+    response_strings = get_class_variable_field_values(Choices)
     response_literals = Literal[*response_strings]
-
-print(ResponseModel.response_strings)
-print(ResponseModel.response_literals)
-print(type(ResponseModel.response_literals))
 
 class TopicChangeCheckerAgent(BaseAgent):
     agent: Runnable

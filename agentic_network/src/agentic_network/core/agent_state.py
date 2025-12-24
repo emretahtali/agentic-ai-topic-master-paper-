@@ -1,11 +1,11 @@
 from langgraph.graph.message import add_messages
-from typing import TypedDict, Annotated, Optional, Union
-from langchain_core.agents import AgentAction, AgentFinish
+from typing import TypedDict, Annotated, Optional
 from langchain_core.messages import AnyMessage
-import operator
+
+from agentic_network.agents.agent_data import AgentData
 
 
 class AgentState(TypedDict):
+    topic_master_state: Optional[TypedDict]
     messages: Annotated[list[AnyMessage], add_messages]
-    intermediate_steps: Annotated[list[tuple[AgentAction, str]], operator.add]
-    agent_outcome: Optional[Union[AgentAction, AgentFinish, None]]
+    active_agent: Optional[AgentData.Agents] # TODO: add to topic manager post processing

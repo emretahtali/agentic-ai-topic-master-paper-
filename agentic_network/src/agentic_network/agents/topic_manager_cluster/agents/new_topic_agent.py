@@ -55,7 +55,7 @@ class NewTopicAgent(BaseAgent):
         new_topic = create_topic(agent_state, selected_agent)
 
         return {
-            "topic_stack": new_topic,
+            "topic_stack": [new_topic],
             "topic_selected": True
         }
 
@@ -111,7 +111,7 @@ class NewTopicAgent(BaseAgent):
 
     STRICT OUTPUT
     Only print the agent parameter. Always select EXACTLY one of:
-    {'\n'.join(AgentData.agent_mapping.keys())}
+    {'\n'.join(AgentData.agent_list)}
     (Do not output anything else.)
 
     LANGUAGE & STYLE

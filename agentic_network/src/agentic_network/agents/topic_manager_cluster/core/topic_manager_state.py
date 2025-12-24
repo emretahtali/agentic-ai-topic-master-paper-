@@ -1,9 +1,10 @@
+from operator import add
+
 from langgraph.graph.message import add_messages
-from typing import TypedDict, Annotated, Optional, Union
+from typing import TypedDict, Annotated, Optional
 from langchain_core.messages import AnyMessage
 
 from agentic_network.agents import AgentData
-from agentic_network.core import AgentState
 
 
 class TopicState(TypedDict):
@@ -12,8 +13,8 @@ class TopicState(TypedDict):
     agent: AgentData.agent_literals
 
 class TopicManagerState(TypedDict):
-    agentic_state: AgentState
+    agentic_state: TypedDict
     current_message: Optional[AnyMessage]
-    topic_stack: list[TopicState]
+    topic_stack: Annotated[list[TopicState], add]
     disclosed_topics: list[TopicState]
     topic_selected: bool

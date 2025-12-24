@@ -3,5 +3,7 @@ from agentic_network.utils import BaseAgent
 
 
 class TopicManagerPreProcessingAgent(BaseAgent):
-    async def _get_node(self, agent_state: TopicManagerState) -> dict:
-        return {}
+    def _get_node(self, agent_state: TopicManagerState) -> dict:
+        return {
+            "topic_selected": False,
+        }

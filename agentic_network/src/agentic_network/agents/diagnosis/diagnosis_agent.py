@@ -22,7 +22,9 @@ class DiagnosisAgent(BaseAgent):
         response = self.model.invoke([system_msg] + messages)
 
         # return back the appointment data to llm
-        return {"messages": [response], "active_agent": "diagnosis_agent"}
+        return {
+            "messages": [response]
+        }
 
 
 

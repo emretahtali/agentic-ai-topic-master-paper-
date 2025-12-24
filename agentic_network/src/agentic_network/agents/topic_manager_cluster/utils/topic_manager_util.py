@@ -51,8 +51,11 @@ def find_topic_index(topic_id: str, topic_stack: list[TopicState]) -> int:
 
 
 def get_current_topic(agent_state: TopicManagerState) -> Optional[TopicState]:
-    if not agent_state["topic_stack"]: return None
-    return agent_state["topic_stack"][-1]
+    topic_stack = agent_state["topic_stack"]
+    if not topic_stack: return None
+    print(f"{topic_stack=}")
+    print(f"{type(topic_stack)=}")
+    return topic_stack[-1]
 
 
 # TODO: we should also populate the person data
@@ -140,27 +143,29 @@ def resurface_topic(state: TopicManagerState, topic_id: str) -> dict:
     return {}
 
 
-def add_topic_id_to_message(msg: AnyMessage, topic_id: str | None) -> AnyMessage:
+def embed_topic_id_to_message(msg: AnyMessage, topic_id: str | None) -> AnyMessage:
     """Return a copy of msg with metadata['topic_id']=topic_id."""
     meta = dict(getattr(msg, "metadata", {}) or {})
     meta["topic_id"] = topic_id
-    # pydantic models support .copy(update=...)
+
     try:
-        return msg.model_copy(update={"metadata": meta})  # type: ignore[attr-defined]
+        # pydantic models support .copy(update=...)
+        return msg.model_copy(update={"metadata": meta})
+
     except Exception:
         # fallback for dataclass-like messages
         return msg.__class__(content=msg.content, metadata=meta)
 
 
-def add_message_to_dialogue(state: AgentState, message: AnyMessage) -> dict:
-    stack = state.get("topic_stack") or []
-    topic_id = stack[-1]["id"] if stack else None
-
-    if topic_id is None:
-        raise RuntimeError("Topic Stack is somehow empty.")
-
-    msg = add_topic_id_to_message(message, topic_id)
-    return {"all_dialog": [msg]}
+# def add_message_to_dialogue(state: AgentState, message: AnyMessage) -> dict:
+#     stack = state.get("topic_stack") or []
+#     topic_id = stack[-1]["id"] if stack else None
+#
+#     if topic_id is None:
+#         raise RuntimeError("Topic Stack is somehow empty.")
+#
+#     msg = embed_topic_id_to_message(message, topic_id)
+#     return {"all_dialog": [msg]}
 
 
 def get_messages_for_topic(state: AgentState, topic_id: str) -> list[AnyMessage]:

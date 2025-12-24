@@ -11,7 +11,6 @@ from mcp_client import appointment_mcp
 class AppointmentAgent(BaseAgent):
     def __init__(self):
         self.tools = appointment_mcp.get_tools()
-        self.tool_map = {tool.name: tool for tool in self.tools}
         self.model = get_llm(LLMModel.APPOINTMENT).bind_tools(self.tools)
 
     async def _get_node(self, state: AgentState) -> dict:
@@ -23,7 +22,6 @@ class AppointmentAgent(BaseAgent):
         # return back the appointment data to llm
         return {
             "messages": [response],
-            "active_agent": "appointment_agent"
         }
 
 
@@ -37,6 +35,7 @@ async def test():
 
         logger.info("Instantiating AppointmentAgent...")
         agent = AppointmentAgent()
+        tool_map = {tool.name: tool for tool in agent.tools}
 
         state: AgentState = {"messages": [], "intermediate_steps": [], "agent_outcome": None}
 
@@ -68,7 +67,7 @@ async def test():
 
                         logger.warning(f"🛠️  TOOL CALL: {tool_name} -> {tool_args}")
 
-                        selected_tool = agent.tool_map.get(tool_name)
+                        selected_tool = tool_map.get(tool_name)
                         tool_output = "Error: Tool not found"
 
                         if selected_tool:
