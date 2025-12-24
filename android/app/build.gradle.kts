@@ -137,4 +137,6 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+    implementation("com.github.jeziellago:compose-markdown:0.5.8")
 }

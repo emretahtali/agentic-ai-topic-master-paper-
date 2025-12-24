@@ -22,6 +22,9 @@ class ChatSupportScreenViewModel(
     private val _uiState = MutableStateFlow(ChatSupportScreenUiState())
     val uiState = _uiState.asStateFlow()
 
+    private val currentThreadId = UUID.randomUUID().toString()
+    private var currentTurnCount = 1
+
     fun onTextValueChanged(value: TextFieldValue) {
         _uiState.update { it.copy(textFieldValue = value) }
     }
@@ -29,6 +32,9 @@ class ChatSupportScreenViewModel(
     fun sendMessage() {
         val prompt = uiState.value.textFieldValue.text
         if (prompt.isBlank()) return
+
+        val clientTurnId = "turn_$currentTurnCount"
+        currentTurnCount++
 
         viewModelScope.launch {
             _uiState.update { currentState ->
@@ -50,7 +56,7 @@ class ChatSupportScreenViewModel(
 
             var currentAiMessageId: String? = null
 
-            aiChatRepository.streamAiMessage(prompt).collect { result ->
+            aiChatRepository.streamAiMessage(prompt = prompt, threadId = currentThreadId,  clientTurnId = clientTurnId).collect { result ->
 
                 result.onSuccess { receivedAiMessage ->
                     android.util.Log.d("VIEWMODEL_DEBUG", "Veri Geldi: ${receivedAiMessage.message}")

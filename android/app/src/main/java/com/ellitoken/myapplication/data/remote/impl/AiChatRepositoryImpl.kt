@@ -21,11 +21,11 @@ class AiChatRepositoryImpl(
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun streamAiMessage(prompt: String): Flow<Result<AiMessage, NetworkError>> {
+    override suspend fun streamAiMessage(prompt: String, threadId: String, clientTurnId: String ): Flow<Result<AiMessage, NetworkError>> {
         val requestObj = AiChatRequest(
             input = InputData(message = prompt),
-            threadId = UUID.randomUUID().toString(),
-            clientTurnId = UUID.randomUUID().toString()
+            threadId = threadId,
+            clientTurnId = clientTurnId
         )
 
         val requestJsonString = json.encodeToString(AiChatRequest.serializer(), requestObj)

@@ -11,9 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.ellitoken.myapplication.presentation.screens.chatsupport.uistate.AiMessage
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -45,11 +47,13 @@ fun AiMessageItem(
                     )
                     .padding(horizontal = 8.dp, vertical = 8.dp)
             ) {
-                Text(
-                    text = aiMessage.message,
-                    color = Color.Black,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium
+                MarkdownText(
+                    markdown = aiMessage.message,
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
             }
         }

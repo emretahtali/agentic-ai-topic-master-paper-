@@ -6,5 +6,5 @@ import kotlinx.coroutines.flow.Flow
 import com.ellitoken.myapplication.utils.Result
 
 interface AiChatRepository {
-    suspend fun streamAiMessage(prompt: String): Flow<Result<AiMessage, NetworkError>>
+    suspend fun streamAiMessage(prompt: String, threadId: String, clientTurnId: String): Flow<Result<AiMessage, NetworkError>>
 }
