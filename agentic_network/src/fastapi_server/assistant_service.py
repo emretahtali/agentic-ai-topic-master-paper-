@@ -91,10 +91,10 @@ class AssistantService:
     # ---------- API operations ----------
 
     async def invoke(
-        self,
-        thread_id: str,
-        input_payload: Dict[str, Any],
-        client_turn_id: Optional[str],
+            self,
+            thread_id: str,
+            input_payload: Dict[str, Any],
+            client_turn_id: Optional[str],
     ) -> Dict[str, Any]:
 
         """Run a single turn (non-streaming); return full state (and a convenience final_text)."""
@@ -110,33 +110,22 @@ class AssistantService:
             if turn_id in self.dialogs[thread_id]:
                 return self.dialogs[thread_id][turn_id]
 
-        async with self.state_cache_lock:
-            self.state_cache.setdefault(thread_id, AgentState(messages=[], intermediate_steps=[], agent_outcome=None))
-            agent_state = self.state_cache[thread_id]
-
         user_text = self._extract_user_text(input_payload)
         if not user_text:
             raise HTTPException(400, "input.message is not provided")
 
         config = {"configurable": {"thread_id": thread_id}}
-        agent_state["messages"].append(HumanMessage(content=user_text))
-        agent_state["intermediate_steps"].clear()
-        agent_state["agent_outcome"] = None
 
-        print("\n---USER MESSAGE---")
+        print(f"\n--- USER MESSAGE (Thread: {thread_id}) ---")
         print(user_text)
 
         result_state = await self.graph.ainvoke(
-            agent_state,
+            {"messages": [HumanMessage(content=user_text)]},
             config=config,
         )
 
         messages = result_state.get("messages", [])
-        if messages:
-            final_text = messages[-1].content
-        else:
-            final_text = "Not give a response"
-
+        final_text = messages[-1].content if messages else "Not Responded"
         resp = {"response": final_text}
 
         # Caching back
