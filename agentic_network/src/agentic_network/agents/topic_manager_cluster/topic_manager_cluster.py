@@ -5,6 +5,7 @@ from agentic_network.agents.topic_manager_cluster.agents.pre_processing_agent im
 from agentic_network.agents.topic_manager_cluster.agents.previous_topics_checker_agent import PreTopicsCheckerAgent
 from agentic_network.agents.topic_manager_cluster.agents.router_agent import RouterAgent
 from agentic_network.agents.topic_manager_cluster.agents.topic_change_checker_agent import TopicChangeCheckerAgent
+from agentic_network.agents.topic_manager_cluster.utils.topic_manager_util import get_current_topic
 from agentic_network.utils.base_agent import BaseAgent
 from agentic_network.agents.topic_manager_cluster.core import (
     TopicManagerRoutes,
@@ -50,11 +51,13 @@ class TopicManagerCluster(BaseAgent):
 
         final_state = self.graph.invoke(topic_master_state)
         topic_stack = final_state.get("topic_stack")
+        current_topic = get_current_topic(final_state)
         # print(f"[TopicMaster] {topic_stack=}")
 
         return {
             "topic_master_state": final_state,
             "messages": final_state["current_message"],
+            "active_agent": current_topic["agent"],
         }
 
     def _initialize_agents(self) -> None:

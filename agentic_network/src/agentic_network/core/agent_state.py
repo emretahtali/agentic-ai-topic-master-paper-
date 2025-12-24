@@ -8,4 +8,4 @@ from agentic_network.agents.agent_data import AgentData
 class AgentState(TypedDict):
     topic_master_state: Optional[TypedDict]
     messages: Annotated[list[AnyMessage], add_messages]
-    active_agent: Optional[AgentData.Agents] # TODO: add to topic manager post processing
+    active_agent: Optional[AgentData.agent_literals]
