@@ -221,7 +221,14 @@ class AppointmentTools(ToolBase):
                 new_date_str=new_date_str,
                 new_time_str=new_time_str
             )
-            return {"result": self._appointment_to_dict(updated_app)}
+
+            result_dict = self._appointment_to_dict(updated_app)
+
+            result_dict.pop("id", None)
+            result_dict.pop("appointment_id", None)
+
+            return {"result": result_dict}
+
         except Exception as e:
             return {"error": str(e)}
 
@@ -251,10 +258,11 @@ class AppointmentTools(ToolBase):
         """
         try:
             result = self.service.cancel_appointment(appointment_id=appointment_id)
+            if isinstance(result, dict):
+                result.pop("appointment_id", None)
             return {"result": result}
         except Exception as e:
             return {"error": str(e)}
-
     def get_doctors_by_hospital_and_branch(self, hospital_id: str, branch: str) -> dict:
         """
         Retrieves a targeted list of doctors working at a specific hospital within a specific medical branch.
