@@ -171,7 +171,12 @@ class AppointmentTools(ToolBase):
                 date_str=date_str,
                 time_str=time_str
             )
-            return {"result": self._appointment_to_dict(new_app)}
+
+            app_dict = self._appointment_to_dict(new_app)
+
+            app_dict.pop("id", None)
+
+            return {"result": app_dict}
         except Exception as e:
             return {"error": str(e)}
 

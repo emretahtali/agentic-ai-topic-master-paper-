@@ -54,9 +54,8 @@ fun provideHttpClient(): HttpClient {
             contentType(ContentType.Application.Json)
             accept(ContentType.Application.Json)
             url {
-                protocol = URLProtocol.HTTP
-                host = "10.0.2.2"
-                port = 8082
+                protocol = URLProtocol.HTTPS
+                host = "zestful-mamie-nondialectally.ngrok-free.dev"
             }
         }
     }
