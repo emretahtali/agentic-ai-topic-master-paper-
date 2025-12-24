@@ -53,8 +53,6 @@ def find_topic_index(topic_id: str, topic_stack: list[TopicState]) -> int:
 def get_current_topic(agent_state: TopicManagerState) -> Optional[TopicState]:
     topic_stack = agent_state["topic_stack"]
     if not topic_stack: return None
-    print(f"{topic_stack=}")
-    print(f"{type(topic_stack)=}")
     return topic_stack[-1]
 
 

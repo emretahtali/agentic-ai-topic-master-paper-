@@ -31,7 +31,7 @@ class PreTopicsCheckerAgent(BaseAgent):
 
     # ---- Internal Methods --------------------------------------------------------
     def _initialize_model(self):
-        print("[TopicChangeCheckerAgent] Initializing LLM connection…")
+        print("[PreTopicsCheckerAgent] Initializing LLM connection…")
         try:
             self.agent = create_agent(
                 model=self.llm,
@@ -39,7 +39,7 @@ class PreTopicsCheckerAgent(BaseAgent):
             )
 
         except Exception as e:
-            print(f"[NewTopicAgent] ❌LLM connection failed.\nError Message:\n{e}")
+            print(f"[PreTopicsCheckerAgent] ❌LLM connection failed.\nError Message:\n{e}")
             exit()
 
     def _get_node(self, agent_state: TopicManagerState) -> dict:
