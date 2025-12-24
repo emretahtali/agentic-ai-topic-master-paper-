@@ -1,7 +1,9 @@
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
 from agentic_network.agents.topic_manager_cluster.core import TopicManagerState
 from agentic_network.agents.topic_manager_cluster.topic_manager_cluster import TopicManagerCluster
+from agentic_network.agents.topic_manager_cluster.utils.topic_manager_util import get_current_topic, \
+    embed_topic_id_to_message
 from agentic_network.core import AgentState
 from benchmark.core import ResultInfo
 
@@ -34,6 +36,22 @@ class TopicMasterBenchmarkWrapper:
         self.topic_master_state["agentic_state"] = self.graph_state
 
         current_agent = self.graph_state.get("active_agent")
+        print(f"selected_intent: {current_agent}")
         return {
-            "structured_output": ResultInfo(extracted_intent=current_agent)
+            "structured_response": ResultInfo(extracted_intent=current_agent)
         }
+
+    def add_ai_message(self, message: str):
+        # print("add_ai_message")
+        current_topic = get_current_topic(self.topic_master_state)
+        current_topic_id = current_topic["id"]
+        ai_message = embed_topic_id_to_message(AIMessage(message), current_topic_id)
+        # print(f"{self.graph_state["messages"]=}")
+        self.graph_state["messages"].append(ai_message)
+        # print(f"{current_topic["messages"]=}")
+        current_topic["messages"].append(ai_message)
+
+        self.graph_state["topic_master_state"] = self.topic_master_state
+        self.topic_master_state["agentic_state"] = self.graph_state
+        self.graph_state["topic_master_state"] = self.topic_master_state
+        self.topic_master_state["agentic_state"] = self.graph_state

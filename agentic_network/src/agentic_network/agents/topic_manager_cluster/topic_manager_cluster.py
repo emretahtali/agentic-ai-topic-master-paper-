@@ -56,7 +56,7 @@ class TopicManagerCluster(BaseAgent):
 
         return {
             "topic_master_state": final_state,
-            "messages": final_state["current_message"],
+            "messages": [final_state["current_message"]],
             "active_agent": current_topic["agent"],
         }
 

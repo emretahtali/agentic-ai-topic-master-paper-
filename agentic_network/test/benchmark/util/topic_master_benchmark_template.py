@@ -4,10 +4,7 @@ import re
 from datetime import datetime
 from typing import Optional, Literal, List, Dict, Any
 
-from langchain.agents import create_agent
-from langchain.agents.structured_output import ProviderStrategy, ToolStrategy
-from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
+from benchmark.util.topic_master_benchmark_wrapper import TopicMasterBenchmarkWrapper
 
 
 class TopicMasterBenchmarkTemplate:
@@ -15,10 +12,8 @@ class TopicMasterBenchmarkTemplate:
 
     def __init__(
             self,
-            result_schema: Any,
             concurrency: int = 5,
     ):
-        self.result_schema = result_schema
         self.concurrency = concurrency
 
         self.logs = []
@@ -39,7 +34,7 @@ class TopicMasterBenchmarkTemplate:
             terminal_output.append(f"{self.CYAN}\n{'=' * 20} DIALOGUE {dialog_id} {'=' * 20}{self.RESET}")
 
             try:
-                agent = None # TODO: TODO
+                agent = TopicMasterBenchmarkWrapper()
 
                 for msg in dialog["messages"]:
                     role = "user" if msg["role"] == "user" else "assistant"
@@ -60,6 +55,7 @@ class TopicMasterBenchmarkTemplate:
                         terminal_output.append(f"{self.YELLOW}User:{self.RESET} {msg['message']}")
                         terminal_output.append(f"{color}└─ Pred: {pred} | True: {truth} {self.RESET}")
                     else:
+                        agent.add_ai_message(message=current_msg["content"])
                         terminal_output.append(f"{self.CYAN}AI:{self.RESET} {msg['message']}")
 
                     chat_history.append(current_msg)
@@ -74,7 +70,7 @@ class TopicMasterBenchmarkTemplate:
             return correct_count, user_msg_count
 
     async def run(self, dataset: List[Dict]):
-        print(f"{self.CYAN}--- Test Started | Model: {self.model_name} | Tip: {self.llm_type} ---{self.RESET}")
+        print(f"{self.CYAN}--- Test Started | Model: 👑Topic Master ---{self.RESET}")
 
         tasks = [self._process_dialogue(d) for d in dataset]
         results = await asyncio.gather(*tasks)
@@ -90,14 +86,13 @@ class TopicMasterBenchmarkTemplate:
         return accuracy
 
     def _save_to_file(self, accuracy: float):
-        safe_name = self.model_name.replace(":", "_").replace("/", "_")
         os.makedirs("io/output_files", exist_ok=True)
-        path = f"io/output_files/{safe_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        path = f"io/output_files/topic_master_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
 
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
         with open(path, "w", encoding="utf-8") as f:
-            f.write(f"Model: {self.model_name}\nType: {self.llm_type}\nAccuracy: {accuracy:.4f}\n\n")
+            f.write(f"Model: 👑Topic Master\nAccuracy: {accuracy:.4f}\n\n")
             for entry in self.logs:
                 f.write(ansi_escape.sub('', entry) + "\n")
         print(f"{self.CYAN}Saved at:{self.RESET} {path}")

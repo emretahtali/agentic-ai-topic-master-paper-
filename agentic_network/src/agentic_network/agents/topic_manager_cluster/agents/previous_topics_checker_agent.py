@@ -1,9 +1,10 @@
 from langchain.agents import create_agent
-from langchain.agents.structured_output import ProviderStrategy
+from langchain.agents.structured_output import ProviderStrategy, ToolStrategy
 from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel
 
+from agentic_network.agents import AgentData
 from agentic_network.agents.topic_manager_cluster.core import TopicManagerState
 from agentic_network.agents.topic_manager_cluster.utils.topic_manager_util import (
     format_dialog_with_topics,
@@ -31,11 +32,11 @@ class PreTopicsCheckerAgent(BaseAgent):
 
     # ---- Internal Methods --------------------------------------------------------
     def _initialize_model(self):
-        print("[PreTopicsCheckerAgent] Initializing LLM connection…")
+        # print("[PreTopicsCheckerAgent] Initializing LLM connection…")
         try:
             self.agent = create_agent(
                 model=self.llm,
-                response_format=ProviderStrategy(self.ResponseSchema),
+                response_format=ToolStrategy(self.ResponseSchema),
             )
 
         except Exception as e:
@@ -43,12 +44,12 @@ class PreTopicsCheckerAgent(BaseAgent):
             exit()
 
     def _get_node(self, agent_state: TopicManagerState) -> dict:
-        print("[PreTopicsCheckerAgent] Running agent...")
+        # print("[PreTopicsCheckerAgent] Running agent...")
 
         topic_stack = agent_state["topic_stack"]
         disclosed_topics = agent_state["disclosed_topics"]
         if not topic_stack and not disclosed_topics:
-            print("[PreTopicsCheckerAgent] There was no topic in stack or disclosed topics, redirect to: NEW TOPIC AGENT")
+            # print("[PreTopicsCheckerAgent] There was no topic in stack or disclosed topics, redirect to: NEW TOPIC AGENT")
 
             return {
                 "topic_selected": False,
@@ -56,7 +57,7 @@ class PreTopicsCheckerAgent(BaseAgent):
 
         dialog = format_dialog_with_topics(agent_state["agentic_state"]["messages"])
         current_message = agent_state["current_message"]
-        system_message = SystemMessage(self._get_system_prompt(dialog, current_message))
+        system_message = SystemMessage(self._get_system_prompt(dialog, current_message.content, AgentData.agent_list))
 
         response = self.agent.invoke(
             {
@@ -80,61 +81,81 @@ class PreTopicsCheckerAgent(BaseAgent):
         return update_state
 
     @staticmethod
-    def _get_system_prompt(dialog: str, message: str) -> str:
-        return f"""You are part of an AI assistant designed to help users with medical conditions get diagnosed and get hospital appointments. Your task here is **topic attribution**: decide which existing topic in the full dialog the latest user input belongs to, or declare that it should start a new topic.
+    def _get_system_prompt(dialog: str, message: str, agents_list: list) -> str:
+        formatted_agents = "\n".join([f"- {agent}" for agent in agents_list])
 
-    TASK
-    Choose the single best topic for the latest user input, or output NEW TOPIC if no clear match exists.
-    
-    INPUTS
-    - user_input — the latest user message (string)
-    
-    - dialog_with_topics — the entire dialog so far, ordered, each turn annotated with a topic id (string) beside it. Each item includes: role, content, topic_id.
-    
-    STRICT OUTPUT
-    Only print the uuid parameter. Always select EXACTLY one of:
-    - uuid=[topic_id]
-    - uuid='{ResponseModel.Choices.new_topic}'
-    (Do not output anything else.)
-    
-    DEFINITIONS
-    - Topic: a coherent, ongoing task/subject within the medical-help context (e.g., symptom triage, a specific appointment, a lab/test, a prescription refill, insurance/billing for THIS visit).
-    - Topic id: the uuid identifier appearing in dialog_with_topics for each message (e.g., "cde7f754-448d-4fc1-af48-37771e4a38a2"). You must choose from topic ids already present in the dialog. Do NOT invent new IDs.
-    
-    DECISION RULES — WHEN TO OUTPUT FOUND TOPIC
-    Return uuid=[topic_id] if the user_input most likely continues one existing topic by any of these signals:
-    1) Adds details, answers a question, clarifies, corrects, or follows up on the same problem/task.
-    2) Refers to the same condition, symptoms, appointment (date/time/location/clinician), test, prescription/medic ation, or admin flow — including via pronouns/synonyms (“that”, “it”, “the MRI”, “Dr. Chen”, “tomorrow at 3”).
-    3) Adjusts logistics for the same task (reschedulings changing location/doctor, confirming/canceling, insurance for that visit).
-    
-    DON'T attach brief acknowledgments/continuers (e.g., “okay,” “yes,” “got it,” “continue”) to a previous topic once the current topic has changed. Such replies cannot be credited to earlier topics; treat them as belonging to the current topic (or NEW TOPIC if no active topic applies).
-    
-    DECISION RULES — WHEN TO OUTPUT uuid='{ResponseModel.Choices.new_topic}'
-    Return uuid='{ResponseModel.Choices.new_topic}' if any apply:
-    1) Introduces a new medical issue, a different appointment/test/medication, or switches to a different patient/person.
-    2) Shifts to a different administrative task for a different visit (e.g., from cardiology scheduling to insurance about physical therapy).
-    3) General/unrelated chat, small talk, or a request unrelated to existing topics.
-    4) Explicit change signals (“new topic”, “separately”, “on another note”).
-    5) Ambiguous content with no clear linkage to any existing topic after applying tie-breakers.
-    
-    TIE-BREAKERS (if multiple topics match)
-    - Prefer the topic with the strongest entity overlap (exact match on condition/appointment/test/clinician/date/time beats vague similarity).
-    - If still tied, prefer the most recent topic in the dialog.
-    - If still unclear, choose uuid='{ResponseModel.Choices.new_topic}'.
-    
-    LANGUAGE & STYLE
-    - Apply the same rules for any language.
-    - Ignore superficial formatting/casing; focus on meaning.
-    - You are not giving medical advice — only attributing the new message to a topic.
-    
-    PROCESS
-    Reflect on the current situation based on the user's message.
-    Then output exactly one final line as specified in STRICT OUTPUT.
-    
-    INPUTS:
-    user_input:
-    {message}
-    
-    dialog_with_topics:
+        return f"""\
+    # ROLE
+    You are a specialized routing component for an AI multi-agent system. Your task is **topic attribution**: decide which existing topic in the dialog the latest user input belongs to, or declare that it should start a new topic.
+
+    ## TASK
+    Choose the single best **topic ID** for the latest user input from the existing conversation, or output **NEW TOPIC** if the input introduces a shift in intent or domain.
+
+    ## INPUTS
+    ### Annotated Dialog (`dialog_with_topics`)
+    ```text
     {dialog}
+    ```
+    
+    ### Latest User Message (`user_input`)
+    ```text
+    {message}
+    ```
+    
+    ### List of Specialized Agents
+    ```text
+    {formatted_agents}
+    ```
+
+    ---
+
+    ## STRICT OUTPUT
+    Only print the `uuid` parameter. Always select **EXACTLY** one of:
+    - `uuid=[topic_id]`
+    - `uuid='{ResponseModel.Choices.new_topic}'`
+
+    ---
+
+    ## DEFINITIONS
+    * **Topic:** A coherent, ongoing task, inquiry, or workflow within a specific domain (e.g., technical troubleshooting, billing, or scheduling).
+    * **Topic ID:** The UUID identifier appearing in `dialog_with_topics`. You must choose from IDs already present in the dialog. **Do NOT invent new IDs.**
+
+    ---
+
+    ## DECISION RULES
+
+    ### Return `uuid=[topic_id]` if:
+    1. **Follow-up:** The input provides answers, clarifications, or follows up on the **active domain/task** of that ID.
+    2. **Entity Consistency:** It refers to the same entities, assets, or processes previously mentioned (via names or pronouns like "it", "that", "the previous one").
+    3. **Logistics Update:** It modifies details for the **SAME** task (e.g., changing the time, quantity, or location for the same service request).
+    4. **Continuity:** It is a brief acknowledgment or continuation cue (e.g., "okay," "go ahead") immediately following that topic.
+
+    ### Return `uuid='{ResponseModel.Choices.new_topic}'` if:
+    1. **Category/Agent Shift:** The user switches to a different domain, specialty, or service category handled by a different agent from the list provided.
+    2. **Entity Swap:** The user starts discussing a completely different project, person, or product, even if the action (e.g., "ordering") is the same.
+    3. **Discontinuity:** The user explicitly abandons the previous thread (e.g., "actually never mind," "let's do something else instead").
+    4. **Meta-Talk:** General small talk, or meta-questions about the AI itself.
+    5. **Ambiguity:** Empty or nonsensical content with no clear semantic link to previous topics.
+
+    ---
+
+    ## TIE-BREAKERS
+    * Prefer the topic with the **strongest entity overlap** (same specific product name, project ID, or person).
+    * For "mixed" messages, if the primary new request is a different domain → **NEW TOPIC**.
+    * If still tied, prefer the **most recent topic**.
+    * If linkage is "strained" or unclear → **NEW TOPIC**.
+
+    ---
+
+    ## LANGUAGE & STYLE
+    * Apply rules universally across all languages.
+    * Focus strictly on **intent and domain boundaries**.
+
+    ---
+
+    ## PROCESS
+    1. **Analyze** the `user_input` for its primary intent and the domain/agent it requires.
+    2. **Compare** this to the domains of the existing topics in the dialog.
+    3. **Identify Shifts:** If the user has switched "targets" (e.g., switching from Department A to Department B), output **NEW TOPIC**.
+    4. **Final Output:** Print exactly one final line as specified in **STRICT OUTPUT**.
     """
