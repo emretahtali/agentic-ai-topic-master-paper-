@@ -57,9 +57,18 @@ class APIServer:
         @app.get("/get_appointments")
         async def get_appointments():
             target_tool_name = "get_patient_appointments"
-            selected_tool = next((t for t in appointment_mcp.get_tools() if t.name == target_tool_name), None)
-            result = await selected_tool.ainvoke({'12345678901'})
-            return result
+
+            tools = appointment_mcp.get_tools()
+            selected_tool = next((t for t in tools if t.name == target_tool_name), None)
+
+            try:
+                tool_args = {"patient_id": "12345678901"}
+
+                result = await selected_tool.ainvoke(tool_args)
+                return result
+
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Tool execution error: get_patient_appointments: {e}")
 
         @app.post("/invoke")
         async def invoke(body: InvokeBody, _=auth_dep):
