@@ -16,5 +16,5 @@ class TopicManagerState(TypedDict):
     agentic_state: TypedDict
     current_message: Optional[AnyMessage]
     topic_stack: Annotated[list[TopicState], add]
-    disclosed_topics: list[TopicState]
+    disclosed_topics: Annotated[list[TopicState], add]
     topic_selected: bool

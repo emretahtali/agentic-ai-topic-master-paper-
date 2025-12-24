@@ -8,7 +8,8 @@ class TopicManagerRoutes(StrEnum):
     END = END
 
     PRE_PROCESSING_AGENT = auto()
-    POST_PROCESSING_AGENT = auto()
     TOPIC_CHANGE_CHECKER_AGENT = auto()
     PRE_TOPICS_AGENT = auto()
     NEW_TOPIC_AGENT = auto()
+    ROUTER_AGENT = auto()
+    POST_PROCESSING_AGENT = auto()

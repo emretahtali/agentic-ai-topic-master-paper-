@@ -57,7 +57,7 @@ def get_current_topic(agent_state: TopicManagerState) -> Optional[TopicState]:
 
 
 # TODO: we should also populate the person data
-def create_topic(state: TopicManagerState, agent: AgentData.agent_literals) -> TopicState:
+def create_topic(state: TopicManagerState) -> TopicState:
     """
     Create a Topic and push it to the top of topic_stack.
     Returns a patch suitable for LangGraph (no in-place mutation).
@@ -79,8 +79,8 @@ def create_topic(state: TopicManagerState, agent: AgentData.agent_literals) -> T
     # }
     return {
         "id": _new_id(),
-        "messages": [state.get("current_message")],
-        "agent": agent,
+        "messages": [],
+        "agent": None,
     }
 
 

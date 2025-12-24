@@ -26,6 +26,13 @@ def main():
         topic_master_state["current_message"] = HumanMessage(message)
 
         agent_state = topic_master_cluster(agent_state)
+        topic_master_state = agent_state.get("topic_master_state")
+        topic_master_state["agentic_state"] = agent_state
+
+        topic_stack = topic_master_state.get("topic_stack")
+        print_topics = [{"messages": list(map(lambda mes: mes.content, topic.get("messages", []))), "agent": topic.get("agent")} for topic in topic_stack]
+
+        print(*print_topics, sep="\n")
 
 
 if __name__ == "__main__":

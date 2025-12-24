@@ -3,6 +3,7 @@ from langgraph.graph.state import CompiledStateGraph, StateGraph
 from agentic_network.agents.topic_manager_cluster.agents.post_processing_agent import TopicManagerPostProcessingAgent
 from agentic_network.agents.topic_manager_cluster.agents.pre_processing_agent import TopicManagerPreProcessingAgent
 from agentic_network.agents.topic_manager_cluster.agents.previous_topics_checker_agent import PreTopicsCheckerAgent
+from agentic_network.agents.topic_manager_cluster.agents.router_agent import RouterAgent
 from agentic_network.agents.topic_manager_cluster.agents.topic_change_checker_agent import TopicChangeCheckerAgent
 from agentic_network.utils.base_agent import BaseAgent
 from agentic_network.agents.topic_manager_cluster.core import (
@@ -25,6 +26,7 @@ class TopicManagerCluster(BaseAgent):
     topic_change_checker_agent: BaseAgent = None
     pre_topics_checker_agent: BaseAgent = None
     new_topic_agent: BaseAgent = None
+    router_agent: BaseAgent = None
     post_processing_agent: BaseAgent = None
 
     def __init__(self):
@@ -34,7 +36,9 @@ class TopicManagerCluster(BaseAgent):
 
     # ---- Internal Methods --------------------------------------------------------
     def _get_node(self, agent_state: AgentState) -> dict:
-        topic_manager_state = agent_state.get("topic_master_state")
+        topic_master_state = agent_state.get("topic_master_state")
+        current_message = topic_master_state["current_message"]
+        # print(f"[TopicMaster] {current_message=}")
 
         # TODO: add this to agentstate
         # TopicManagerState(
@@ -44,8 +48,12 @@ class TopicManagerCluster(BaseAgent):
         #     disclosed_topics=[],
         #     topic_selected=False
 
-        final_state = self.graph.invoke(topic_manager_state)
+        final_state = self.graph.invoke(topic_master_state)
+        topic_stack = final_state.get("topic_stack")
+        # print(f"[TopicMaster] {topic_stack=}")
+
         return {
+            "topic_master_state": final_state,
             "messages": final_state["current_message"],
         }
 
@@ -59,6 +67,7 @@ class TopicManagerCluster(BaseAgent):
         self.topic_change_checker_agent = TopicChangeCheckerAgent()
         self.pre_topics_checker_agent = PreTopicsCheckerAgent()
         self.new_topic_agent = NewTopicAgent()
+        self.router_agent = RouterAgent()
         self.post_processing_agent = TopicManagerPostProcessingAgent()
 
     def _build_graph(self) -> None:
@@ -79,12 +88,14 @@ class TopicManagerCluster(BaseAgent):
         graph_builder.add_node(TopicManagerRoutes.TOPIC_CHANGE_CHECKER_AGENT, self.topic_change_checker_agent)
         graph_builder.add_node(TopicManagerRoutes.PRE_TOPICS_AGENT, self.pre_topics_checker_agent)
         graph_builder.add_node(TopicManagerRoutes.NEW_TOPIC_AGENT, self.new_topic_agent)
+        graph_builder.add_node(TopicManagerRoutes.ROUTER_AGENT, self.router_agent)
         graph_builder.add_node(TopicManagerRoutes.POST_PROCESSING_AGENT, self.post_processing_agent)
 
         # ---------------------- Linear Edge(s) ----------------------------------------
         graph_builder.add_edge(TopicManagerRoutes.START, TopicManagerRoutes.PRE_PROCESSING_AGENT)
         graph_builder.add_edge(TopicManagerRoutes.PRE_PROCESSING_AGENT, TopicManagerRoutes.TOPIC_CHANGE_CHECKER_AGENT)
-        graph_builder.add_edge(TopicManagerRoutes.NEW_TOPIC_AGENT, TopicManagerRoutes.POST_PROCESSING_AGENT)
+        graph_builder.add_edge(TopicManagerRoutes.NEW_TOPIC_AGENT, TopicManagerRoutes.ROUTER_AGENT)
+        graph_builder.add_edge(TopicManagerRoutes.ROUTER_AGENT, TopicManagerRoutes.POST_PROCESSING_AGENT)
         graph_builder.add_edge(TopicManagerRoutes.POST_PROCESSING_AGENT, TopicManagerRoutes.END)
 
         # ---------------------- Conditional Routing -----------------------------------
@@ -93,7 +104,7 @@ class TopicManagerCluster(BaseAgent):
             is_topic_selected,
             path_map={
                 TopicManagerRoutes.NEXT: TopicManagerRoutes.PRE_TOPICS_AGENT,
-                TopicManagerRoutes.END: TopicManagerRoutes.POST_PROCESSING_AGENT
+                TopicManagerRoutes.END: TopicManagerRoutes.ROUTER_AGENT
             },
         )
         graph_builder.add_conditional_edges(
@@ -101,7 +112,7 @@ class TopicManagerCluster(BaseAgent):
             is_topic_selected,
             path_map={
                 TopicManagerRoutes.NEXT: TopicManagerRoutes.NEW_TOPIC_AGENT,
-                TopicManagerRoutes.END: TopicManagerRoutes.POST_PROCESSING_AGENT,
+                TopicManagerRoutes.END: TopicManagerRoutes.ROUTER_AGENT,
             },
         )
 
