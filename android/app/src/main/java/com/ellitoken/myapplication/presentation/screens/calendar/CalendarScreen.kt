@@ -35,6 +35,10 @@ fun CalendarScreen(navController: NavController, viewModel: CalendarScreenViewMo
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.fetchAppointments()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(

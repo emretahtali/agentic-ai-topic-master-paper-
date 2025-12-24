@@ -13,12 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ellitoken.myapplication.presentation.screens.calendar.viewmodel.AppointmentWithStatus
+import com.ellitoken.myapplication.data.remote.model.AppointmentData
 
 @Composable
 fun AppointmentListSection(
     title: String,
-    appointments: List<AppointmentWithStatus>
+    appointments: List<AppointmentData>
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Text(
@@ -31,7 +31,7 @@ fun AppointmentListSection(
             contentPadding = PaddingValues(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(appointments, key = { it.data.id }) { appointmentWithStatus ->
+            items(appointments, key = { it.id }) { appointmentWithStatus ->
                 AppointmentListItem(
                     appointmentWithStatus = appointmentWithStatus,
                     onEditClick = { /* TODO:Appointment Edit Process */ },

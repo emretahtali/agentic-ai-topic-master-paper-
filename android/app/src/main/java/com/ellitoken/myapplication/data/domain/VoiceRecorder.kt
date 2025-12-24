@@ -18,12 +18,10 @@ import kotlin.math.max
 
 class VoiceRecorder(private val context: Context) {
 
-    // Arayüz aynı kalıyor, ViewModel bu sınıfın içini bilmek zorunda değil
     var onListeningStarted: (() -> Unit)? = null
     var onEndpointDetected: (() -> Unit)? = null
     var onError: ((String, Throwable?) -> Unit)? = null
 
-    // --- AudioRecord ve Sessizlik Algılama için Gerekli Değişkenler ---
     private val sampleRate = 16000
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
     private val audioFormat = AudioFormat.ENCODING_PCM_16BIT

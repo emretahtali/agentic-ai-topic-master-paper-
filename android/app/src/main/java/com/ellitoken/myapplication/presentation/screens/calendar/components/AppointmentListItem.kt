@@ -16,13 +16,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ellitoken.myapplication.data.remote.model.AppointmentData
 import com.ellitoken.myapplication.ui.theme.appBlue
-import com.ellitoken.myapplication.presentation.screens.calendar.viewmodel.AppointmentWithStatus
 import com.ellitoken.myapplication.ui.theme.appWhite
 
 @Composable
 fun AppointmentListItem(
-    appointmentWithStatus: AppointmentWithStatus,
+    appointmentWithStatus: AppointmentData,
     onEditClick: () -> Unit,
     onCancelClick: () -> Unit
 ) {
@@ -50,7 +50,7 @@ fun AppointmentListItem(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = appointmentWithStatus.data.dateTime,
+                        text = appointmentWithStatus.dateTime,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black
@@ -75,7 +75,7 @@ fun AppointmentListItem(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = appointmentWithStatus.data.hospitalName,
+                    text = appointmentWithStatus.hospitalName,
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -92,7 +92,7 @@ fun AppointmentListItem(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = appointmentWithStatus.data.doctorName,
+                    text = appointmentWithStatus.doctorName,
                     fontSize = 14.sp,
                     color = Color.Gray
                 )

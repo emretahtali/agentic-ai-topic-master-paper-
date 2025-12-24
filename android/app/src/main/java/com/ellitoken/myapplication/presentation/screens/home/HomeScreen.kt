@@ -26,14 +26,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.ellitoken.myapplication.R
-import com.ellitoken.myapplication.data.remote.model.upcomingAppointments
 import com.ellitoken.myapplication.presentation.navigation.Screen
 import com.ellitoken.myapplication.presentation.screens.home.components.*
 import com.ellitoken.myapplication.presentation.screens.home.viewmodel.HomeScreenViewModel
 import com.ellitoken.myapplication.ui.theme.appBackground
+import com.ellitoken.myapplication.ui.theme.appBlue
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.getViewModel
-// import java.io.File // <-- SİLİNDİ
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +41,11 @@ fun HomeScreen(
     viewModel: HomeScreenViewModel = getViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchUpcomingAppointments()
+    }
+
     val context = LocalContext.current
     val healthSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
@@ -62,7 +66,6 @@ fun HomeScreen(
         }
     }
 
-    // İzin kontrolü (Aynen kalıyor)
     fun requestMicAndStart() {
         val granted = ContextCompat.checkSelfPermission(
             context, Manifest.permission.RECORD_AUDIO
@@ -74,37 +77,6 @@ fun HomeScreen(
             micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
     }
-
-    // 'playAudio' fonksiyonu SİLİNDİ
-    // (Artık 'VoiceApiService' içinde)
-    /*
-    fun playAudio(file: File) {
-        val mediaPlayer = MediaPlayer()
-        try {
-            mediaPlayer.setDataSource(file.absolutePath)
-            mediaPlayer.prepare()
-            mediaPlayer.start()
-
-            mediaPlayer.setOnCompletionListener { player ->
-                player.release()
-                viewModel.onPlaybackFinished()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            viewModel.onPlaybackFinished()
-        }
-    }
-    */
-
-    // 'LaunchedEffect' SİLİNDİ
-    // (Artık UI state'i oynatmayı tetiklemiyor)
-    /*
-    LaunchedEffect(uiState.processedAudioFile) {
-        uiState.processedAudioFile?.let { fileToPlay ->
-            playAudio(fileToPlay)
-        }
-    }
-    */
 
     Scaffold(
         topBar = {
@@ -132,21 +104,6 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(24.dp))
-
-            VoiceInputCardFinal(
-                isSpeaking = uiState.isSpeaking,
-                setSpeaking = viewModel::setSpeaking,
-                voiceState = uiState.voiceState,
-                onMicClick = {
-                    viewModel.setMicClicked(true)
-                    requestMicAndStart()
-                },
-                onStopListening = {
-                    viewModel.stopListeningAndProcess()
-                },
-            )
-
             Spacer(Modifier.height(24.dp))
 
             Column(
@@ -208,17 +165,29 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                UpcomingAppointmentsSection(
-                    appointments = upcomingAppointments,
-                    onAppointmentClick = { }
-                )
+                if (uiState.isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = appBlue)
+                    }
+                } else {
+                    UpcomingAppointmentsSection(
+                        appointments = uiState.upcomingAppointments,
+                        onAppointmentClick = { appointment ->
+                            navController.navigate(Screen.CalendarScreen.route)
+                        }
+                    )
+                }
 
                 Spacer(Modifier.height(24.dp))
             }
         }
     }
 
-    // Sağlık Anketi (Aynen kalıyor)
     if (uiState.isHealthSurveySheetOpen) {
         val surveyItems = viewModel.getHealthSurveyItems()
         val pagerState = rememberPagerState(pageCount = { surveyItems.size })

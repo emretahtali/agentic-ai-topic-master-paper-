@@ -4,7 +4,9 @@ import com.ellitoken.myapplication.data.domain.VoiceRecorder
 import com.ellitoken.myapplication.data.remote.ApiClient
 import com.ellitoken.myapplication.data.remote.api.VoiceApiService
 import com.ellitoken.myapplication.data.remote.impl.AiChatRepositoryImpl
+import com.ellitoken.myapplication.data.remote.impl.CalendarChatRepositoryImpl
 import com.ellitoken.myapplication.data.remote.repository.AiChatRepository
+import com.ellitoken.myapplication.data.remote.repository.CalendarChatRepository
 import com.ellitoken.myapplication.data.remote.repository.ChatSupportRepository
 import com.ellitoken.myapplication.presentation.screens.calendar.viewmodel.CalendarScreenViewModel
 import com.ellitoken.myapplication.presentation.screens.chatsupport.viewmodel.ChatSupportScreenViewModel
@@ -23,10 +25,11 @@ val appModule = module {
     single { ChatSupportRepository() }
     single { VoiceApiService(androidContext()) }
     factory { VoiceRecorder(androidContext()) }
-    single { HomeScreenViewModel(get(), get() , get()) }
     single { ApiClient(get(), get()) }
     single<AiChatRepository> { AiChatRepositoryImpl(get()) }
-    viewModel{ CalendarScreenViewModel() }
+    single<CalendarChatRepository> { CalendarChatRepositoryImpl(get()) }
+    viewModel{ HomeScreenViewModel(get(), get() , get(), get()) }
+    viewModel{ CalendarScreenViewModel(get()) }
     viewModel{ ChatSupportScreenViewModel(get()) }
     viewModel{ ProfileScreenViewModel() }
 

@@ -1,5 +1,6 @@
 package com.ellitoken.myapplication.presentation.screens.home.uistate
 
+import com.ellitoken.myapplication.data.remote.model.AppointmentData
 import com.ellitoken.myapplication.data.remote.model.User
 import java.io.File
 
@@ -10,7 +11,8 @@ data class HomeScreenUiState(
     val voiceState: VoiceState = VoiceState.Idle,
     val isMicClicked: Boolean = false,
     val isSpeaking: Boolean = false,
-    val processedAudioFile: File? = null
+    val processedAudioFile: File? = null,
+    val upcomingAppointments: List<AppointmentData> = emptyList()
 )
 
 
