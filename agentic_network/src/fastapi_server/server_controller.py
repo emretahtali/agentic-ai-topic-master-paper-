@@ -1,5 +1,7 @@
 from typing import Optional
 from fastapi import FastAPI, WebSocket, Depends, Header, HTTPException
+
+from mcp_client import appointment_mcp
 from .assistant_service import AssistantService
 from .invoke_body import InvokeBody
 from fastapi.encoders import jsonable_encoder
@@ -51,6 +53,13 @@ class APIServer:
         @app.get("/healthz")
         def healthz():
             return {"ok": True}
+
+        @app.get("/get_appointments")
+        async def get_appointments():
+            target_tool_name = "get_patient_appointments"
+            selected_tool = next((t for t in appointment_mcp.get_tools() if t.name == target_tool_name), None)
+            result = await selected_tool.ainvoke({'12345678901'})
+            return result
 
         @app.post("/invoke")
         async def invoke(body: InvokeBody, _=auth_dep):
