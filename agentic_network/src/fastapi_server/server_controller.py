@@ -2,6 +2,7 @@ from typing import Optional
 from fastapi import FastAPI, WebSocket, Depends, Header, HTTPException
 from .assistant_service import AssistantService
 from .invoke_body import InvokeBody
+from fastapi.encoders import jsonable_encoder
 
 
 class APIServer:
@@ -85,7 +86,7 @@ class APIServer:
                     return
 
                 async for event in service.stream(thread_id=thread_id, user_text=user_text):
-                    await websocket.send_json(event)
+                    await websocket.send_json(jsonable_encoder(event))
 
                 await websocket.send_json({"event": "complete"})
 

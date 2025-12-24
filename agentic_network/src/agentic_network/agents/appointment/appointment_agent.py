@@ -14,13 +14,35 @@ class AppointmentAgent(Agent):
         self.tool_map = {tool.name: tool for tool in self.tools}
         self.model = appointment_llm.bind_tools(self.tools)
 
+#    async def _get_node(self, state: AgentState) -> dict:
+#       messages = state["messages"]
+#
+#       # call model
+#       response = self.model.invoke([system_msg] + messages)
+#
+#       # return back the appointment data to llm
+#        return {
+#           "messages": [response],
+#            "active_agent": "appointment_agent"
+#       }
+
     async def _get_node(self, state: AgentState) -> dict:
         messages = state["messages"]
 
-        # call model
-        response = self.model.invoke([system_msg] + messages)
+        cleaned_messages = []
+        for msg in messages:
+            if msg.type == "tool" and isinstance(msg.content, list):
+                msg_content = ""
+                for item in msg.content:
+                    if isinstance(item, dict) and "text" in item:
+                        msg_content += item["text"]
+                    else:
+                        msg_content += str(item)
+                msg.content = msg_content
+            cleaned_messages.append(msg)
 
-        # return back the appointment data to llm
+        response = self.model.invoke([system_msg] + cleaned_messages)
+
         return {
             "messages": [response],
             "active_agent": "appointment_agent"
