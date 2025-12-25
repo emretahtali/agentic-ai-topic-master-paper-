@@ -177,8 +177,7 @@ fun HomeScreen(
                 } else {
                     UpcomingAppointmentsSection(
                         appointments = uiState.upcomingAppointments,
-                        onAppointmentClick = { appointment ->
-                            navController.navigate(Screen.CalendarScreen.route)
+                        onAppointmentClick = {
                         }
                     )
                 }

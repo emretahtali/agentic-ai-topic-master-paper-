@@ -25,11 +25,9 @@ fun AppointmentCard(
     doctorName: String,
     patientName: String,
     hospitalName: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
-        onClick = onClick,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier
             .width(220.dp)

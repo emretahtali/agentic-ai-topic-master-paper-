@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,14 @@ fun UpcomingAppointmentsSection(
     appointments: List<AppointmentData>,
     onAppointmentClick: (AppointmentData) -> Unit
 ) {
+    val sortedAppointments = remember(appointments) {
+        appointments.sortedBy { it.dateTime }
+    }
+
+    val filteredAppointmets = remember(sortedAppointments) {
+        sortedAppointments.filter { it.status != "CANCEL" }
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -40,7 +49,7 @@ fun UpcomingAppointmentsSection(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(
-                items = appointments,
+                items = filteredAppointmets,
                 key = { it.id }
             ) { appointment ->
                 AppointmentCard(
@@ -48,7 +57,6 @@ fun UpcomingAppointmentsSection(
                     doctorName = appointment.doctorName,
                     patientName = appointment.patientName,
                     hospitalName = appointment.hospitalName,
-                    onClick = { onAppointmentClick(appointment) }
                 )
             }
         }
