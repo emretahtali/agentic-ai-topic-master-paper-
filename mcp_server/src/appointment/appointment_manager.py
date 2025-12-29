@@ -204,7 +204,7 @@ class AppointmentManager:
 
         return result
 
-    def create_appointment(self, doctor_id: str, patient_id: str, date_str: str, time_str: str):
+    def create_appointment(self, doctor_id: str, patient_id: str, hospital_id: str, date_str: str, time_str: str):
         """
         Creates a new medical appointment in the system.
 
@@ -219,6 +219,7 @@ class AppointmentManager:
         Parameters:
         - doctor_id (str, REQUIRED): The unique ID of the doctor (e.g., 'doc-1').
         - patient_id (str, REQUIRED): The unique ID of the patient (e.g., 'pat-100').
+        - hospital_id (str, REQUIRED): The unique ID of the hospital (e.g., '3').
         - date_str (str, REQUIRED): The date of the appointment in "YYYY-MM-DD" format.
         - time_str (str, REQUIRED): The time of the appointment in "HH:MM" format.
 
@@ -255,7 +256,7 @@ class AppointmentManager:
             start_time=target_dt,
             status=AppointmentStatus.BOOKED,
             end_time=target_dt + timedelta(minutes=30),
-            hospital_id=doctor.hospital_id
+            hospital_id=hospital_id
         )
 
         self.appointments.append(new_appointment)

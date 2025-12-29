@@ -130,6 +130,7 @@ class AppointmentTools(ToolBase):
             self,
             doctor_id: str,
             patient_id: str,
+            hospital_id: str,
             date_str: Annotated[str, Field(
                 description="The date of the appointment in STRICT 'YYYY-MM-DD' format. Calculate relative dates (like 'tomorrow') based on the current date.")],
             time_str: Annotated[
@@ -154,6 +155,10 @@ class AppointmentTools(ToolBase):
             patient_id (str): The unique ID of the patient.
                 RULE: Get this from the current user session/context.
 
+            hospital_id (str): The unique ID of the hospital.
+                RULE: Do NOT guess. If the user provided a name (e.g., "Araştırma Hospital"),
+                you must have already resolved it to an ID using 'get_available_hospitals'.
+
             date_str (str): The date of the appointment.
                 RULE: STRICT FORMAT "YYYY-MM-DD".
 
@@ -168,6 +173,7 @@ class AppointmentTools(ToolBase):
             new_app = self.service.create_appointment(
                 doctor_id=doctor_id,
                 patient_id=patient_id,
+                hospital_id=hospital_id,
                 date_str=date_str,
                 time_str=time_str
             )
