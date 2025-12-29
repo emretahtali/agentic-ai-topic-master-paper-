@@ -7,12 +7,12 @@ def str_to_dt(dt_str):
 MOCK_DATA = {
     "hospitals": [
         {"id": "1", "name": "Medipol Hospital", "city": "Ankara", "district": "Çankaya"},
-        {"id": "2", "name": "Hacettepe Hospital", "city": "Ankara", "district": "Çankaya"},
-        {"id": "3", "name": "Acıbadem Hospital", "city": "İstanbul", "district": "Fatih"},
+        {"id": "2", "name": "Atari Hospital", "city": "Ankara", "district": "Çankaya"},
+        {"id": "3", "name": "Acibadem Hospital", "city": "İstanbul", "district": "Fatih"},
         {"id": "4", "name": "Haseki Hospital", "city": "İstanbul", "district": "Fatih"},
-        {"id": "5", "name": "Öztan Hospital", "city": "İzmir", "district": "Bornova"},
+        {"id": "5", "name": "BAL Hospital", "city": "İzmir", "district": "Bornova"},
         {"id": "6", "name": "YKB Private Hospital", "city": "İzmir", "district": "Bornova"},
-        {"id": "7", "name": "Sorgun Devlet Hastanesi", "city": "Yozgat", "district": "Sorgun"},
+        {"id": "7", "name": "Medicana Hastanesi", "city": "Yozgat", "district": "Sorgun"},
         {"id": "8", "name": "EKABI Hospital", "city": "Yozgat", "district": "Sorgun"}
     ],
 
