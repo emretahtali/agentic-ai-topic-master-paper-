@@ -6,7 +6,7 @@ from typing import Optional
 class AppointmentStatus(Enum):
     AVAILABLE = "MÜSAİT"
     BOOKED = "DOLU"
-    CANCELLED = "İPTAL"
+    CANCELLED = "CANCEL"
     COMPLETED = "TAMAMLANDI"
 
 @dataclass(frozen=True)

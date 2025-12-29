@@ -56,7 +56,7 @@ class APIServer:
         def healthz():
             return {"ok": True}
 
-        @app.get("/get_appointments")
+        @app.get("/api/get_appointments")
         async def get_appointments():
             target_tool_name = "get_patient_appointments"
 
