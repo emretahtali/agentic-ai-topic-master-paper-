@@ -10,8 +10,8 @@ class NewTopicAgent(BaseAgent):
 
     # ---- Internal Methods --------------------------------------------------------
     def _get_node(self, agent_state: TopicManagerState) -> dict:
-        print("[NewTopicAgent] Running agent...")
-        print("[NewTopicAgent] New topic is created.")
+        # print("[NewTopicAgent] Running agent...")
+        # print("[NewTopicAgent] New topic is created.")
         new_topic = create_topic(agent_state)
 
         return {

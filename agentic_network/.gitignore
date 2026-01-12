@@ -63,3 +63,6 @@ DS_Store
 .DS_Store
 uv.lock
 .idea
+
+digest.py
+digest.txt

@@ -7,6 +7,7 @@ from benchmark.core import ResultInfo
 
 from benchmark.dataset import dataset
 from benchmark.util import BenchmarkTemplate
+from benchmark.util.topic_master_benchmark_template import TopicMasterBenchmarkTemplate
 
 
 async def main():
@@ -18,19 +19,21 @@ async def main():
     ENDPOINT = os.getenv("BENCHMARK_LLM_ENDPOINT")
     STRATEGY = os.getenv("BENCHMARK_LLM_STRATEGY").lower()
 
-    tester = BenchmarkTemplate(
-        llm_type=PROVIDER,
-        model_name=MODEL,
-        api_key=API_KEY,
-        system_prompt=system_prompt,
-        result_schema=ResultInfo,
-        endpoint=ENDPOINT,
+    # tester = BenchmarkTemplate(
+    #     llm_type=PROVIDER,
+    #     model_name=MODEL,
+    #     api_key=API_KEY,
+    #     system_prompt=system_prompt,
+    #     result_schema=ResultInfo,
+    #     endpoint=ENDPOINT,
+    #     concurrency=5,
+    #     strategy_type=STRATEGY
+    # )
+    tester = TopicMasterBenchmarkTemplate(
         concurrency=5,
-        strategy_type=STRATEGY
     )
 
     await tester.run(dataset)
-
 
 if __name__ == "__main__":
     try:

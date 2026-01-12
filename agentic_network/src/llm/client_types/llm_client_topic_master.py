@@ -1,9 +1,13 @@
 import os
 
 from dotenv import load_dotenv, find_dotenv
+from langchain.agents import create_agent
+from langchain.agents.structured_output import ProviderStrategy, ToolStrategy
 from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from pydantic import BaseModel
 
 from llm.models import LLMModel
 
@@ -29,10 +33,18 @@ def get_llm_topic_master() -> BaseChatModel:
         api_key=llm_key,
     )
 
+class TestSchema(BaseModel):
+    response: str
 
 def test():
     llm = get_llm_topic_master()
-    response = llm.invoke("Hello pal!")
+
+    agent = create_agent(
+        model=llm,
+        response_format=ToolStrategy(TestSchema),
+        debug=True,
+    )
+    response = agent.invoke({"messages": [HumanMessage("Hello pal!")]})
     print(f"{response.content=}")
 
 if __name__ == "__main__":

@@ -27,7 +27,7 @@ class RouterAgent(BaseAgent):
 
     # ---- Internal Methods --------------------------------------------------------
     def _initialize_model(self):
-        print("[RouterAgent] Initializing LLM connection…")
+        # print("[RouterAgent] Initializing LLM connection…")
         try:
             self.agent = create_agent(
                 model=self.llm,
@@ -39,13 +39,13 @@ class RouterAgent(BaseAgent):
             exit()
 
     def _get_node(self, agent_state: TopicManagerState) -> dict:
-        print("[RouterAgent] Running agent...")
+        # print("[RouterAgent] Running agent...")
 
         current_message = agent_state.get("current_message")
         messages = get_current_topic(agent_state)["messages"][:]
         messages.append(current_message)
         topic_messages = format_dialog(messages)
-        system_message = SystemMessage(self._get_system_prompt(current_message.content, topic_messages))
+        system_message = SystemMessage(self._get_system_prompt(current_message.content, topic_messages, AgentData.agent_list))
 
         response = self.agent.invoke(
             {
@@ -55,86 +55,91 @@ class RouterAgent(BaseAgent):
                 ]
             }
         )
-        selected_agent = response["structured_response"].agent.upper()
+        selected_agent = response["structured_response"].agent
 
-        print("[RouterAgent] Routing to agent:", selected_agent)
+        # print("[RouterAgent] Routing to agent:", selected_agent)
         current_topic = get_current_topic(agent_state)
         current_topic["agent"] = selected_agent
 
         return {}
 
     @staticmethod
-    def _get_system_prompt(message: str, topic_messages: str) -> str:
-        return f"""You are part of a medical assistant. Your sole task is **agent routing for the current topic**: based ONLY on the latest user message, choose which specialized agent should handle it.
+    def _get_system_prompt(message: str, topic_messages: str, agents_list: list) -> str:
+        formatted_agents = "\n".join([f"- {agent}" for agent in agents_list])
 
-    AGENTS & THEIR SCOPES
-    - DIAGNOSIS_AGENT
-      Purpose: Clinical questions and symptom triage.
-      Route here when the message:
-      • Describes symptoms, concerns, or a medical problem (“fever and cough”, “rash on my arm”).
-      • Asks about causes, severity, risks, next clinical steps, labs/imaging interpretation, or treatment options.
-      • Asks about medications in a clinical sense (side effects, interactions, dosing, safety, effectiveness).
-      • Mentions urgent/emergency-sounding issues (chest pain, shortness of breath, suicide/self-harm) — still classify here.
-      Examples: “My throat hurts and I have a fever.” / “Is 101°F dangerous?” / “What does a high WBC mean?” / “Is it safe to take ibuprofen with amoxicillin?”
+        return f"""\
+    # ROLE
+    You are a specialized routing component for an AI multi-agent system. Your sole task is **agent routing**: based ONLY on the latest user message and the provided context, choose which specialized agent should handle it.
 
-    - APPOINTMENT_AGENT
-      Purpose: Care logistics, scheduling, and visit-related admin.
-      Route here when the message:
-      • Requests to book, reschedule, confirm, or cancel appointments, tests, or procedures.
-      • Specifies dates/times/locations/clinicians, preferences, or availability.
-      • Handles visit logistics: telehealth vs. in-person, directions, preparation instructions, paperwork.
-      • Handles visit-specific admin: insurance eligibility for this visit, referrals, prescription refills as an administrative request (“send to Walgreens”), change pharmacy for this prescription, provider/hospital choice for this booking.
-      Examples: “Can you book me with Dr. Chen tomorrow at 3?” / “Move my MRI to next week.” / “Cancel my appointment.” / “Send the refill to CVS on 5th.”
-
-    - SMALL_TALK_AGENT
-      Purpose: Polite chatter and meta-assistant talk.
-      Route here when the message:
-      • Is greetings, thanks, acknowledgments, chit-chat, jokes, or short non-medical pleasantries.
-      • Asks about the assistant itself (“what’s your name?”, “who made you?”) or generic “ok/thanks”.
-      Examples: “Thanks!” / “hi there” / “lol that’s helpful” / “what are you?”
-
-    - OUT_OF_TOPIC_AGENT
-      Purpose: Everything irrelevant to healthcare tasks.
-      Route here when the message:
-      • Is clearly non-medical (shopping, travel, programming help, sports, etc.).
-      • Is spam, empty, emoji-only, or not actionable.
-      • Is administrative/billing not tied to a specific visit and cannot be addressed by scheduling logistics (e.g., “explain my insurance plan in general”).
-      Examples: “Write me a Python script.” / “Plan my vacation.” / “What’s the stock price of XYZ?”
-
-    INPUT
-    - user_input — the latest user message (string):
-    {message}
-    
-    - topic_messages - older messages of this topic:
+    ## INPUTS
+    ### Prior Context (`topic_messages`)
+    ```text
     {topic_messages}
+    ```
+    
+    ### Latest User Input (`user_input`)
+    ```text
+    {message}
+    ```
+    
+    ### List of Specialized Agents
+    ```text
+    {formatted_agents}
+    ```
 
-    DECISION RULES
-    - Classify the **single best agent** for the current topic. Do not assume continuity with prior topics.
-    - If the message contains both clinical details and an explicit scheduling action (e.g., “I have ear pain; book me with ENT tomorrow”), prefer **APPOINTMENT_AGENT** (the actionable request).
-    - If there’s clinical content but no explicit scheduling/admin action, choose **DIAGNOSIS_AGENT**.
-    - If the content is only greetings/thanks/acknowledgments or meta-chat, choose **SMALL_TALK_AGENT**.
-    - If none of the above clearly applies or it’s unrelated to healthcare tasks, choose **OUT_OF_TOPIC_AGENT**.
-    - Ambiguous? Prefer DIAGNOSIS_AGENT over OUT_OF_TOPIC_AGENT **only if** there is some medical substance (symptom/condition/med/drug/test term). Otherwise use OUT_OF_TOPIC_AGENT.
+    ---
 
-    STRICT OUTPUT
-    Only print the agent parameter. Always select EXACTLY one of:
-    {'\n'.join(AgentData.agent_list)}
-    (Do not output anything else.)
+    ## DECISION RULES
+    1. **Single Best Agent:** Classify the single best agent based on the specialized scopes provided.
+    2. **Action Priority:** If a message contains both information and an explicit request for action (e.g., "The site is slow, please open a ticket"), route to the agent responsible for the **action** (the "task-doer").
+    3. **Information Priority:** If seeking information or describing a situation without a specific task, route to the agent responsible for that **subject matter**.
+    4. **Brief Responses:** For brief acknowledgments (e.g., "okay," "got it"), route to the agent that was **previously active** in the `topic_messages` unless the user explicitly changes the subject.
+    5. **Ambiguity:** If a message is on the border, select the agent whose scope description most specifically matches the user's keywords.
 
-    LANGUAGE & STYLE
-    - Apply the same rules for any language.
-    - Ignore superficial formatting/casing; focus on meaning.
-    - You are not giving medical advice — only attributing the current topic to an agent.
+    ## STRICT OUTPUT
+    Only print the agent parameter. Always select **EXACTLY** one agent name from the provided list.
+    **(Do not output anything else.)**
+    ""Only and only respond with PascalCase: PascalCase, FindHotels, ReserveRestaurant etc.""
 
-    PROCESS
-    Decide which agent must be called to answer the user's message
-    Then output exactly one final line as specified in STRICT OUTPUT.
+    ---
 
-    EXAMPLES
-    1) “I’ve had a cough for a week and green phlegm.” → select_agent("DIAGNOSIS_AGENT")
-    2) “Book me with Dr. Patel next Tuesday afternoon.” → select_agent("APPOINTMENT_AGENT")
-    3) “Thanks!” → select_agent("SMALL_TALK_AGENT")
-    4) “Can you explain my BluePlus plan in general?” → select_agent("OUT_OF_TOPIC_AGENT")
-    5) “Refill my amoxicillin to Walgreens on 5th.” → select_agent("APPOINTMENT_AGENT")
-    6) “Is it safe to take ibuprofen with amoxicillin?” → select_agent("DIAGNOSIS_AGENT")
+    ## LANGUAGE & STYLE
+    * Apply these rules universally across all languages.
+    * Focus strictly on **intent and functional scope**.
+    ""Only and only respond with PascalCase: PascalCase, FindHotels, ReserveRestaurant etc.""
+
+    ## PROCESS
+    1. **Analyze** the user's core intent (What do they want to *know* or *do*?).
+    2. **Match** that intent against the 'Purpose' and 'Scope' of the available agents.
+    3. **Output** exactly one final line with the agent name.
+
+    ---
+
+    ## EXAMPLES
+    1. **AddAlarm:** "Wake me up at 7 AM tomorrow."
+    2. **BuyBusTicket:** "I'd like to buy a seat on the 5:00 PM bus to Boston."
+    3. **FindAttractions:** "What are some fun things to do in San Francisco this weekend?"
+    4. **FindBus:** "When is the next bus arriving at North Station?"
+    5. **FindProvider:** "I need to find a local internet service provider in Seattle."
+    6. **GetAlarms:** "Show me a list of all my active alarms."
+    7. **LookupMusic:** "Who sang the song that goes 'Ground Control to Major Tom'?"
+    8. **PlayMedia:** "Shuffle my jazz playlist on Spotify."
+    9. **ReserveHotel:** "Go ahead and book the King Suite at the Hilton for those dates."
+    10. **ReserveRestaurant:** "Table for four at Mama Leone's at 8 PM, please."
+    11. **SearchHotel:** "Find me hotels in Tokyo with a gym and free breakfast."
+    12. **SearchHouse:** "Look for 3-bedroom houses for sale in the suburbs of Austin."
+    13. **SearchRoundtripFlights:** "I need a roundtrip flight from London to New York for next month."
+    14. **NONE:** "Asdfghjkl" or "What color is a mirror?"
+    15. **AddAlarm**: "Wait, scratch that—make it 8 AM instead." (Correction to the latest topic)
+    16. **BuyBusTicket**: "Does the ticket price include a carry-on bag?" (Specific inquiry within the current topic)
+    17. **SearchHotel**: "Actually, what is the weather like in Tokyo first?" (Interruption/Switch to a new topic)
+    18. **ReserveRestaurant**: "Can we increase the party size to six?" (Modification of an active topic)
+    19. **FindAttractions**: "Are any of those places open after 10 PM?" (Refining the latest topic with a constraint)
+    20. **SearchHouse**: "Show me more like the first one you found." (Contextual reference to a previous result)
+    21. **NONE**: "I'm not sure yet, I'll have to check my schedule." (Stalling/Non-actionable input)
+    22. **ReserveHotel**: "Is it too late to change my check-in date?" (Attempting to modify a previous topic)
+    23. **FindProvider**: "Never mind about the internet, do they offer cable TV too?" (Pivoting from a current topic to a new related one)
+    24. **LookupMusic**: "Who was the lead singer of that band again?" (Follow-up question on a previous topic)
+    25. **NONE**: "Tell me a joke." (Out-of-scope request that doesn't trigger an expert)
+    26. **NONE**: "No, I don't want to make the reservation now."
     """
