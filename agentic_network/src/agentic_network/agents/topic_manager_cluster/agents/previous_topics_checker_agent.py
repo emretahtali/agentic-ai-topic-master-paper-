@@ -36,7 +36,7 @@ class PreTopicsCheckerAgent(BaseAgent):
         try:
             self.agent = create_agent(
                 model=self.llm,
-                response_format=ToolStrategy(self.ResponseSchema),
+                response_format=ProviderStrategy(self.ResponseSchema),
             )
 
         except Exception as e:

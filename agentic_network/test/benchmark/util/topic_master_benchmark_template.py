@@ -60,6 +60,8 @@ class TopicMasterBenchmarkTemplate:
 
                     chat_history.append(current_msg)
 
+                terminal_output.append(agent.get_topic_stack())
+
             except Exception as e:
                 terminal_output.append(f"{self.RED}Error in Dialogue {dialog_id}: {e}{self.RESET}")
 

@@ -31,7 +31,7 @@ class RouterAgent(BaseAgent):
         try:
             self.agent = create_agent(
                 model=self.llm,
-                response_format=ToolStrategy(self.ResponseSchema)
+                response_format=ProviderStrategy(self.ResponseSchema)
             )
 
         except Exception as e:
@@ -116,9 +116,30 @@ class RouterAgent(BaseAgent):
     ---
 
     ## EXAMPLES
-    *(Assuming a Business/Tech system)*
-    1. **Input:** "How do I reset my password?" → `TechSupport`
-    2. **Input:** "My last invoice looks wrong, I was overcharged $50." → `BillingOperator`
-    3. **Input:** "What are the best things to see in Rome besides the Colosseum" → `FindAttractions`
-    4. **Input:** "I'm looking for a pet-friendly hotel in downtown Seattle for under $200 a night." → `SearchHotels`
+    1. **AddAlarm:** "Wake me up at 7 AM tomorrow."
+    2. **BuyBusTicket:** "I'd like to buy a seat on the 5:00 PM bus to Boston."
+    3. **FindAttractions:** "What are some fun things to do in San Francisco this weekend?"
+    4. **FindBus:** "When is the next bus arriving at North Station?"
+    5. **FindProvider:** "I need to find a local internet service provider in Seattle."
+    6. **GetAlarms:** "Show me a list of all my active alarms."
+    7. **LookupMusic:** "Who sang the song that goes 'Ground Control to Major Tom'?"
+    8. **PlayMedia:** "Shuffle my jazz playlist on Spotify."
+    9. **ReserveHotel:** "Go ahead and book the King Suite at the Hilton for those dates."
+    10. **ReserveRestaurant:** "Table for four at Mama Leone's at 8 PM, please."
+    11. **SearchHotel:** "Find me hotels in Tokyo with a gym and free breakfast."
+    12. **SearchHouse:** "Look for 3-bedroom houses for sale in the suburbs of Austin."
+    13. **SearchRoundtripFlights:** "I need a roundtrip flight from London to New York for next month."
+    14. **NONE:** "Asdfghjkl" or "What color is a mirror?"
+    15. **AddAlarm**: "Wait, scratch that—make it 8 AM instead." (Correction to the latest topic)
+    16. **BuyBusTicket**: "Does the ticket price include a carry-on bag?" (Specific inquiry within the current topic)
+    17. **SearchHotel**: "Actually, what is the weather like in Tokyo first?" (Interruption/Switch to a new topic)
+    18. **ReserveRestaurant**: "Can we increase the party size to six?" (Modification of an active topic)
+    19. **FindAttractions**: "Are any of those places open after 10 PM?" (Refining the latest topic with a constraint)
+    20. **SearchHouse**: "Show me more like the first one you found." (Contextual reference to a previous result)
+    21. **NONE**: "I'm not sure yet, I'll have to check my schedule." (Stalling/Non-actionable input)
+    22. **ReserveHotel**: "Is it too late to change my check-in date?" (Attempting to modify a previous topic)
+    23. **FindProvider**: "Never mind about the internet, do they offer cable TV too?" (Pivoting from a current topic to a new related one)
+    24. **LookupMusic**: "Who was the lead singer of that band again?" (Follow-up question on a previous topic)
+    25. **NONE**: "Tell me a joke." (Out-of-scope request that doesn't trigger an expert)
+    26. **NONE**: "No, I don't want to make the reservation now."
     """

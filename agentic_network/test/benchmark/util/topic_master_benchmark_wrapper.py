@@ -55,3 +55,9 @@ class TopicMasterBenchmarkWrapper:
         self.topic_master_state["agentic_state"] = self.graph_state
         self.graph_state["topic_master_state"] = self.topic_master_state
         self.topic_master_state["agentic_state"] = self.graph_state
+
+    def get_topic_stack(self):
+        topic_stack = self.topic_master_state.get("topic_stack")
+        print_topics = [{"messages": list(map(lambda mes: mes.content, topic.get("messages", []))), "agent": topic.get("agent")}.__str__() for topic in topic_stack]
+
+        return "topic stack:\n" + "\n".join(print_topics)
