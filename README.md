@@ -1,6 +1,6 @@
 # agentic-ai-topic-master-paper
+```
 Repository Structure (src):
-'''
 ├── __init__.py
 ├── agentic_network
 │   ├── __init__.py
@@ -80,4 +80,4 @@ Repository Structure (src):
     └── util
         ├── __init__.py
         └── mcp_client.py
-'''
+```
