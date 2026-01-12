@@ -92,12 +92,12 @@ Repository Structure (src):
 * **FastAPI Streaming Server:** Supports both synchronous (`/invoke`) and WebSocket streaming (`/stream`) endpoints.
 * **Model Agnostic:** Configurable to run with Google Gemini, OpenAI, or DeepInfra.
 
-## 🛠️ Prerequisites
+## Prerequisites
 
 * Python 3.10+
 * [uv](https://docs.astral.sh/uv/) (Recommended for dependency management)
 
-## ⚙️ Configuration
+## Configuration
 
 Create a `.env` file in the root directory. Configure the following variables based on your LLM provider and server needs:
 
@@ -117,21 +117,21 @@ GEMINI_API_MODEL=gemini-2.5-flash
 GEMINI_API_ENDPOINT=[https://generativelanguage.googleapis.com](https://generativelanguage.googleapis.com)
 
 # Topic Master Specific LLM (Routing Logic)
-TOPIC_MASTER_LLM_TYPE=GEMINI
+TOPIC_MASTER_LLM_TYPE=google
 TOPIC_MASTER_LLM_API_KEY=your_google_api_key
 TOPIC_MASTER_LLM_MODEL_NAME=gemini-2.5-flash
 
 # Diagnosis Agent LLM
-DIAGNOSIS_LLM_TYPE=GEMINI
+DIAGNOSIS_LLM_TYPE=google
 DIAGNOSIS_LLM_API_KEY=your_google_api_key
 DIAGNOSIS_LLM_MODEL_NAME=medgemma-27b # or relevant model
 
 # Appointment Agent LLM
-APPOINTMENT_LLM_TYPE=GEMINI
+APPOINTMENT_LLM_TYPE=google
 APPOINTMENT_LLM_API_KEY=your_google_api_key
 ```
 
-## 🚀 Usage
+## Usage
 
 ### 1. Install Dependencies
 ```bash
@@ -165,3 +165,21 @@ The server will start on `0.0.0.0:8082` (or your configured port).
 }
 ```
 
+## Running the Benchmark
+
+To replicate the evaluation results presented in the paper (stress-testing the **Topic Stack** against the Schema-Guided Dialogue dataset), use the provided benchmark script. This simulation stress-tests the `TopicMasterCluster` against dynamic, multi-domain conversation shifts.
+
+### 1. Configure Benchmark Environment
+Ensure your `.env` contains the necessary API keys, as the benchmark generates synthetic user interactions to test routing precision.
+
+```env
+# Benchmark Configuration
+BENCHMARK_LLM_PROVIDER=google
+BENCHMARK_LLM_MODEL=gemini-model
+BENCHMARK_LLM_API_KEY=api-key
+BENCHMARK_LLM_STRATEGY=PROVIDER
+```
+Execute Evaluation:
+```bash
+uv run python -m benchmark.run_evaluation
+```
